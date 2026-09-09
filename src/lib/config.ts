@@ -1,0 +1,3 @@
+const envNumber = (value: string | undefined, fallback: number) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+export const appConfig = { dataMode: import.meta.env.VITE_DATA_MODE ?? "mock", chainId: envNumber(import.meta.env.VITE_CHAIN_ID, 50312), rpcUrl: import.meta.env.VITE_RPC_URL ?? "https://dream-rpc.somnia.network", dreamdexApiUrl: import.meta.env.VITE_DREAMDEX_API_URL ?? "https://stg.api.dreamdex.io/v0", relayerApiUrl: import.meta.env.VITE_RELAYER_API_URL ?? "/api", minCampaignTimeRemainingSeconds: envNumber(import.meta.env.VITE_MIN_CAMPAIGN_TIME_REMAINING_SECONDS, 300) } as const;
+export const MIN_CAMPAIGN_TIME_REMAINING_SECONDS = appConfig.minCampaignTimeRemainingSeconds;
