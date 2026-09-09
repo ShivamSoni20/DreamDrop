@@ -34,8 +34,8 @@ export const Route = createFileRoute("/dashboard/")({
 });
 
 function Dashboard() {
-  const campaigns = useQuery({ queryKey: ["campaigns"], queryFn: getCampaigns });
-  const activity = useQuery({ queryKey: ["activity"], queryFn: getActivity });
+  const campaigns = useQuery({ queryKey: ["campaigns"], queryFn: () => getCampaigns() });
+  const activity = useQuery({ queryKey: ["activity"], queryFn: () => getActivity() });
 
   const list = campaigns.data ?? [];
   const dropsCreated = list.reduce((sum, c) => sum + c.totalDrops, 0);

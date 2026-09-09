@@ -2,7 +2,12 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCountdown, pct, usd } from "@/lib/format";
-import type { Side } from "@/lib/types";
+import type {
+  CampaignStatus,
+  MarketStatus,
+  PositionStatus,
+  Side,
+} from "@/lib/types";
 
 export function LiveBadge({ label = "LIVE" }: { label?: string }) {
   return (
@@ -45,12 +50,12 @@ export function SideBadge({
 export function StatusBadge({
   status,
 }: {
-  status: "LIVE" | "SETTLED" | "DRAFT" | "WON" | "LOST" | "SOLD" | "REDEEMED" | "ACTIVE";
+  status: CampaignStatus | MarketStatus | PositionStatus;
 }) {
   const tone =
     status === "WON" || status === "REDEEMED"
       ? "bg-up-soft text-up"
-      : status === "LOST"
+      : status === "LOST" || status === "FAILED" || status === "VOIDED"
         ? "bg-down-soft text-down"
         : status === "LIVE" || status === "ACTIVE"
           ? "border border-border bg-card text-foreground"

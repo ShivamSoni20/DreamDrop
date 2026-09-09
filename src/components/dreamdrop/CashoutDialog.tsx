@@ -129,9 +129,12 @@ export function CashoutDialog({
                   disabled={submitting}
                   onClick={async () => {
                     setSubmitting(true);
-                    if (!isCashoutQuoteUsable(quote, position.quantity)) return;
-                    await onConfirmed(quote.bestExecutablePrice!);
-                    setSubmitting(false);
+                    try {
+                      if (!isCashoutQuoteUsable(quote, position.quantity)) return;
+                      await onConfirmed(quote.bestExecutablePrice!);
+                    } finally {
+                      setSubmitting(false);
+                    }
                   }}
                 >
                   {submitting ? (
