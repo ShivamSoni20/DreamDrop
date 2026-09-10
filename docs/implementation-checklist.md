@@ -9,7 +9,7 @@
 - [x] Standalone DreamDEX market/read/mint/balance smoke script
 - [x] ERC-6909 Distributor with Merkle claims and recipient authorization
 - [x] PostgreSQL/Supabase schema with RLS-denied browser access
-- [ ] Distributor contract tests
+- [x] Distributor contract tests (20 passing Foundry tests)
 - [ ] Deploy Distributor to Shannon and record address/transaction
 - [ ] Persistent server repositories and wallet-authenticated endpoints
 - [ ] Secure claim generation, proofs, challenge storage, and idempotent relayer

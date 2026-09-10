@@ -2,13 +2,7 @@ export type Asset = "BTC" | "ETH" | (string & {});
 export type PredictionSide = "UP" | "DOWN";
 export type Side = PredictionSide;
 export type MarketStatus =
-  | "TRADING"
-  | "LOCKING"
-  | "LOCKED"
-  | "RESOLVING"
-  | "FINALIZED"
-  | "VOIDED"
-  | "EXPIRED";
+  "TRADING" | "LOCKING" | "LOCKED" | "RESOLVING" | "FINALIZED" | "VOIDED" | "EXPIRED";
 export type Liquidity = "HEALTHY" | "THIN" | "NONE";
 export type HexAddress = `0x${string}`;
 export type TransactionHash = `0x${string}`;
@@ -118,14 +112,7 @@ export interface ClaimedDrop {
   position: Position;
 }
 export type PositionStatus =
-  | "ACTIVE"
-  | "SOLD"
-  | "RESOLVING"
-  | "WON"
-  | "LOST"
-  | "VOIDED"
-  | "REDEEMABLE"
-  | "REDEEMED";
+  "ACTIVE" | "SOLD" | "RESOLVING" | "WON" | "LOST" | "VOIDED" | "REDEEMABLE" | "REDEEMED";
 export interface Position {
   id: string;
   campaignId: string;
