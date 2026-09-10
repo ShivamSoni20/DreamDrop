@@ -8,18 +8,10 @@ import { AppShell } from "@/components/dreamdrop/AppShell";
 import { PredictionTicket } from "@/components/dreamdrop/PredictionTicket";
 import { CashoutDialog } from "@/components/dreamdrop/CashoutDialog";
 import { Sparkline, Stat } from "@/components/dreamdrop/primitives";
-import {
-  CardsSkeleton,
-  ErrorState,
-  MobileBottomAction,
-} from "@/components/dreamdrop/states";
+import { CardsSkeleton, ErrorState, MobileBottomAction } from "@/components/dreamdrop/states";
 import { Button } from "@/components/ui/button";
 import { pct, timeAgo, usd } from "@/lib/format";
-import {
-  cashOutPosition,
-  getPosition,
-  redeemPosition,
-} from "@/services/positionService";
+import { cashOutPosition, getPosition, redeemPosition } from "@/services/positionService";
 
 const searchSchema = z.object({
   cashout: z.boolean().optional(),
@@ -89,9 +81,7 @@ function PositionDetail() {
             {p.asset} {p.side} sold for
           </p>
           <p className="mt-2 text-5xl font-semibold">{usd(soldFor)}</p>
-          <p className="mt-3 font-mono text-xs break-all text-muted-foreground">
-            {p.claimTx}
-          </p>
+          <p className="mt-3 font-mono text-xs break-all text-muted-foreground">{p.claimTx}</p>
           <div className="mt-8 flex flex-col gap-2">
             <Button variant="outline" onClick={() => toast.info("Mock explorer link")}>
               View transaction
@@ -113,13 +103,9 @@ function PositionDetail() {
       <AppShell>
         <div className="mx-auto max-w-md text-center">
           <h1 className="text-3xl font-semibold">Payout redeemed.</h1>
-          <p className="mt-2 text-5xl font-semibold">
-            {usd(p.potentialPayout)}
-          </p>
+          <p className="mt-2 text-5xl font-semibold">{usd(p.potentialPayout)}</p>
           <p className="mt-2 text-sm text-muted-foreground">mock collateral</p>
-          <p className="mt-3 font-mono text-xs break-all text-muted-foreground">
-            {p.claimTx}
-          </p>
+          <p className="mt-3 font-mono text-xs break-all text-muted-foreground">{p.claimTx}</p>
           <div className="mt-8 flex flex-col gap-2">
             <Button variant="outline" onClick={() => toast.info("Mock explorer link")}>
               View transaction
@@ -147,9 +133,7 @@ function PositionDetail() {
               <span className="animate-reveal mx-auto flex size-12 items-center justify-center rounded-full bg-up text-up-foreground">
                 <PartyPopper className="size-5" aria-hidden="true" />
               </span>
-              <h1 className="mt-4 text-2xl font-semibold text-up">
-                You called it.
-              </h1>
+              <h1 className="mt-4 text-2xl font-semibold text-up">You called it.</h1>
               <p className="mt-1 text-sm">
                 {p.asset} {p.side} won. Redeemable {usd(p.potentialPayout)}.
               </p>
@@ -159,13 +143,27 @@ function PositionDetail() {
             <div className="mb-6 rounded-2xl border border-border bg-card p-6">
               <h1 className="text-2xl font-semibold">Market settled.</h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                {p.asset} finished {p.side === "UP" ? "DOWN" : "UP"}. Your{" "}
-                {p.asset} {p.side} position settled at $0.
+                {p.asset} finished {p.side === "UP" ? "DOWN" : "UP"}. Your {p.asset} {p.side}{" "}
+                position settled at $0.
               </p>
             </div>
           ) : null}
-          {resolving ? <div className="mb-6 rounded-2xl border border-border bg-card p-6"><h1 className="text-2xl font-semibold">Market resolving</h1><p className="mt-2 text-sm text-muted-foreground">Cash-out is closed while the final outcome is confirmed.</p></div> : null}
-          {voided ? <div className="mb-6 rounded-2xl border border-border bg-card p-6"><h1 className="text-2xl font-semibold">Market voided</h1><p className="mt-2 text-sm text-muted-foreground">This position can be redeemed according to the market’s void rules.</p></div> : null}
+          {resolving ? (
+            <div className="mb-6 rounded-2xl border border-border bg-card p-6">
+              <h1 className="text-2xl font-semibold">Market resolving</h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Cash-out is closed while the final outcome is confirmed.
+              </p>
+            </div>
+          ) : null}
+          {voided ? (
+            <div className="mb-6 rounded-2xl border border-border bg-card p-6">
+              <h1 className="text-2xl font-semibold">Market voided</h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                This position can be redeemed according to the market’s void rules.
+              </p>
+            </div>
+          ) : null}
 
           <PredictionTicket
             eyebrow={p.claimedFrom}
@@ -184,9 +182,7 @@ function PositionDetail() {
             <Sparkline values={p.probabilityHistory} className="h-16" />
             <div className="mt-2 flex justify-between text-xs text-muted-foreground">
               <span>{pct(p.probabilityHistory[0] ?? 0)}</span>
-              <span>
-                {pct(p.probabilityHistory[p.probabilityHistory.length - 1] ?? 0)}
-              </span>
+              <span>{pct(p.probabilityHistory[p.probabilityHistory.length - 1] ?? 0)}</span>
             </div>
           </div>
         </div>
@@ -224,11 +220,7 @@ function PositionDetail() {
             <div className="flex flex-col gap-2">
               {p.status === "ACTIVE" ? (
                 <>
-                  <Button
-                    size="lg"
-                    className="shadow-brand"
-                    onClick={() => setCashoutOpen(true)}
-                  >
+                  <Button size="lg" className="shadow-brand" onClick={() => setCashoutOpen(true)}>
                     Cash out
                   </Button>
                   <Button
@@ -257,10 +249,7 @@ function PositionDetail() {
                   <Link to="/explore">Explore DreamDEX</Link>
                 </Button>
               ) : null}
-              <Button
-                variant="ghost"
-                onClick={() => toast.success("Share link copied")}
-              >
+              <Button variant="ghost" onClick={() => toast.success("Share link copied")}>
                 <Share2 className="size-4" aria-hidden="true" />
                 Share drop result
               </Button>

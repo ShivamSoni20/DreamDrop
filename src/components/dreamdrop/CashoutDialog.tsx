@@ -70,8 +70,8 @@ export function CashoutDialog({
             <DialogHeader>
               <DialogTitle>No cash-out liquidity right now</DialogTitle>
               <DialogDescription>
-                There isn't currently an executable buyer for your full
-                position. You can continue holding until settlement.
+                There isn't currently an executable buyer for your full position. You can continue
+                holding until settlement.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -92,26 +92,21 @@ export function CashoutDialog({
             <div className="space-y-3 rounded-xl border border-border bg-surface p-4">
               <div className="flex items-baseline justify-between">
                 <span className="text-sm text-muted-foreground">Position</span>
-                <span className="text-sm font-medium">
-                  {position.quantity} contract
-                </span>
+                <span className="text-sm font-medium">{position.quantity} contract</span>
               </div>
               <div className="flex items-baseline justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Market probability
-                </span>
-                <span className="text-sm font-medium">
-                  {pct(quote.marketProbability)}
-                </span>
+                <span className="text-sm text-muted-foreground">Market probability</span>
+                <span className="text-sm font-medium">{pct(quote.marketProbability)}</span>
               </div>
               <MoneyRow label="Best executable price" value={quote.bestExecutablePrice ?? 0} />
-              <div className="flex items-baseline justify-between"><span className="text-sm text-muted-foreground">Available at this price</span><span className="text-sm font-medium">{quote.executableQuantity} contract</span></div>
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm text-muted-foreground">Available at this price</span>
+                <span className="text-sm font-medium">{quote.executableQuantity} contract</span>
+              </div>
               <MoneyRow label="Estimated proceeds" value={quote.estimatedProceeds ?? 0} emphasis />
               <MoneyRow label="Minimum received" value={quote.minimumProceeds ?? 0} />
               <div className="flex items-baseline justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Quote expires
-                </span>
+                <span className="text-sm text-muted-foreground">Quote expires</span>
                 <span className="font-mono text-sm tabular-nums">
                   {expired ? "expired" : `${String(seconds).padStart(2, "0")}s`}
                 </span>

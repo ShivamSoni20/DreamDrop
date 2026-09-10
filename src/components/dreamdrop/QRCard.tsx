@@ -37,15 +37,10 @@ export function QRCard({
       <p className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
         {label}
       </p>
-      <div
-        ref={wrapper}
-        className="mx-auto mt-4 w-fit rounded-xl border border-border bg-card p-3"
-      >
+      <div ref={wrapper} className="mx-auto mt-4 w-fit rounded-xl border border-border bg-card p-3">
         <QRCodeCanvas value={value} size={size} level="M" marginSize={1} />
       </div>
-      {caption ? (
-        <p className="mt-3 text-sm text-muted-foreground">{caption}</p>
-      ) : null}
+      {caption ? <p className="mt-3 text-sm text-muted-foreground">{caption}</p> : null}
       <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
         <Button variant="outline" onClick={copy}>
           <Copy className="size-4" aria-hidden="true" />

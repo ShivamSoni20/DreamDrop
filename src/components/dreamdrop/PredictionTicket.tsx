@@ -36,11 +36,7 @@ export function PredictionTicket({
   revealAnimation = false,
 }: PredictionTicketProps) {
   const accent =
-    side === "DOWN"
-      ? "from-down-soft"
-      : side === "UP"
-        ? "from-up-soft"
-        : "from-accent";
+    side === "DOWN" ? "from-down-soft" : side === "UP" ? "from-up-soft" : "from-accent";
 
   return (
     <div
@@ -51,12 +47,7 @@ export function PredictionTicket({
       )}
       style={{ ["--notch-top" as string]: compact ? "58%" : "62%" }}
     >
-      <div
-        className={cn(
-          "bg-gradient-to-br to-card px-5 pt-5 pb-4 sm:px-6",
-          accent,
-        )}
-      >
+      <div className={cn("bg-gradient-to-br to-card px-5 pt-5 pb-4 sm:px-6", accent)}>
         <div className="flex items-center justify-between gap-3">
           <span className="text-[0.65rem] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
             {eyebrow}
@@ -76,9 +67,7 @@ export function PredictionTicket({
               <Lock className="size-6" aria-hidden="true" />
             </span>
             <p className="text-2xl font-semibold">{asset} · Live market</p>
-            <p className="text-sm text-muted-foreground">
-              Your side is still hidden.
-            </p>
+            <p className="text-sm text-muted-foreground">Your side is still hidden.</p>
           </div>
         ) : (
           <div className="mt-4">
@@ -88,8 +77,7 @@ export function PredictionTicket({
                 compact ? "text-2xl" : "text-4xl sm:text-5xl",
               )}
             >
-              {asset} {side}{" "}
-              <span aria-hidden="true">{side === "UP" ? "↑" : "↓"}</span>
+              {asset} {side} <span aria-hidden="true">{side === "UP" ? "↑" : "↓"}</span>
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {side ? <SideBadge side={side} size="sm" /> : null}
@@ -133,11 +121,7 @@ export function PredictionTicket({
             {status === "LIVE" ? "Market ends in" : "Market"}
           </p>
           <p className="font-mono text-lg font-semibold tabular-nums">
-            {status === "LIVE" && expiresAt ? (
-              <Countdown expiresAt={expiresAt} />
-            ) : (
-              "settled"
-            )}
+            {status === "LIVE" && expiresAt ? <Countdown expiresAt={expiresAt} /> : "settled"}
           </p>
         </div>
       </div>

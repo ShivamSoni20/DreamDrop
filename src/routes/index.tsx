@@ -20,8 +20,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "DreamDrop — Airdrops that are live predictions" },
       {
         property: "og:description",
-        content:
-          "Fund positions, generate QR drops, and hand out live BTC or ETH predictions.",
+        content: "Fund positions, generate QR drops, and hand out live BTC or ETH predictions.",
       },
     ],
   }),
@@ -59,12 +58,11 @@ function Landing() {
               Powered by DreamDEX · Built on Somnia
             </p>
             <h1 className="mt-4 text-4xl leading-[1.05] font-semibold sm:text-5xl lg:text-6xl">
-              Airdrops that are{" "}
-              <span className="text-brand-gradient">live predictions.</span>
+              Airdrops that are <span className="text-brand-gradient">live predictions.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-              Turn your campaign budget into real DreamDEX positions. Give
-              people BTC or ETH predictions they can hold, cash out, or redeem.
+              Turn your campaign budget into real DreamDEX positions. Give people BTC or ETH
+              predictions they can hold, cash out, or redeem.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Button asChild size="lg" className="shadow-brand">
@@ -187,22 +185,18 @@ function Landing() {
           ))}
         </div>
         <div className="mt-6 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface p-4 text-sm">
-          {[
-            "Creator",
-            "DreamDrop",
-            "QR",
-            "Prediction Ticket",
-            "Hold / Sell / Redeem",
-          ].map((step, i, arr) => (
-            <span key={step} className="flex items-center gap-2">
-              <span className="rounded-lg bg-card px-3 py-1.5 font-medium shadow-soft">
-                {step}
+          {["Creator", "DreamDrop", "QR", "Prediction Ticket", "Hold / Sell / Redeem"].map(
+            (step, i, arr) => (
+              <span key={step} className="flex items-center gap-2">
+                <span className="rounded-lg bg-card px-3 py-1.5 font-medium shadow-soft">
+                  {step}
+                </span>
+                {i < arr.length - 1 ? (
+                  <ArrowRight className="size-4 text-muted-foreground" aria-hidden="true" />
+                ) : null}
               </span>
-              {i < arr.length - 1 ? (
-                <ArrowRight className="size-4 text-muted-foreground" aria-hidden="true" />
-              ) : null}
-            </span>
-          ))}
+            ),
+          )}
         </div>
       </section>
 
@@ -213,7 +207,10 @@ function Landing() {
         <h2 className="text-3xl font-semibold sm:text-4xl">Use cases</h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            ["Community giveaways", "Give members live predictions instead of static token rewards."],
+            [
+              "Community giveaways",
+              "Give members live predictions instead of static token rewards.",
+            ],
             ["Conferences", "Put Prediction Drop QR codes inside attendee packs."],
             ["Creator campaigns", "Give followers opposing sides of the same live market."],
             ["Protocol growth", "Turn incentive budgets into actual DreamDEX participation."],
@@ -236,9 +233,15 @@ function Landing() {
         <h2 className="text-3xl font-semibold sm:text-4xl">Why DreamDrop</h2>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {[
-            ["Own before you trade", "Recipients start with a real position before depositing money."],
+            [
+              "Own before you trade",
+              "Recipients start with a real position before depositing money.",
+            ],
             ["Rewards that move", "The reward itself changes value with the market."],
-            ["Built-in participation", "Every claimed position gives users a reason to hold, sell, or redeem."],
+            [
+              "Built-in participation",
+              "Every claimed position gives users a reason to hold, sell, or redeem.",
+            ],
           ].map(([title, body]) => (
             <article key={title} className="rounded-2xl bg-surface p-6">
               <span className="flex size-9 items-center justify-center rounded-xl bg-brand-gradient text-primary-foreground">
@@ -346,17 +349,13 @@ function LiveDemo() {
               <p className="flex items-center gap-1 text-sm font-semibold text-up">
                 <ArrowUp className="size-4" aria-hidden="true" /> UP
               </p>
-              <p className="mt-1 text-2xl font-semibold text-up">
-                {pct(probability)}
-              </p>
+              <p className="mt-1 text-2xl font-semibold text-up">{pct(probability)}</p>
             </div>
             <div className="rounded-xl bg-down-soft p-4">
               <p className="flex items-center gap-1 text-sm font-semibold text-down">
                 <ArrowDown className="size-4" aria-hidden="true" /> DOWN
               </p>
-              <p className="mt-1 text-2xl font-semibold text-down">
-                {pct(1 - probability)}
-              </p>
+              <p className="mt-1 text-2xl font-semibold text-down">{pct(1 - probability)}</p>
             </div>
           </div>
           <p className="mt-6 text-sm text-muted-foreground">

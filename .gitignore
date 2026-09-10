@@ -20,6 +20,10 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Foundry
+contracts/cache/
+contracts/out/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

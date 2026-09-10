@@ -2,17 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/dreamdrop/AppShell";
 import { PredictionTicket } from "@/components/dreamdrop/PredictionTicket";
-import {
-  CardsSkeleton,
-  EmptyState,
-  ErrorState,
-  PageHeader,
-} from "@/components/dreamdrop/states";
+import { CardsSkeleton, EmptyState, ErrorState, PageHeader } from "@/components/dreamdrop/states";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPositions } from "@/services/positionService";
 import type { Position } from "@/lib/types";
 import { usd } from "@/lib/format";
+import { useWallet } from "@/lib/wallet";
 
 export const Route = createFileRoute("/my-drops")({
   head: () => ({
@@ -68,14 +64,14 @@ function PositionTile({ position }: { position: Position }) {
 }
 
 function MyDrops() {
+  const wallet = useWallet();
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ["positions"],
-    queryFn: getPositions,
+    queryKey: ["positions", wallet.address],
+    queryFn: () => getPositions(wallet.address ?? undefined),
   });
 
   const active = data?.filter((p) => p.status === "ACTIVE") ?? [];
-  const settled =
-    data?.filter((p) => p.status !== "ACTIVE") ?? [];
+  const settled = data?.filter((p) => p.status !== "ACTIVE") ?? [];
 
   return (
     <AppShell>

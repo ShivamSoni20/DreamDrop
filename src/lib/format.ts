@@ -1,5 +1,4 @@
-export const usd = (value: number) =>
-  `$${value.toFixed(2)}`;
+export const usd = (value: number) => `$${value.toFixed(2)}`;
 
 export const pct = (value: number) => `${Math.round(value * 100)}%`;
 
@@ -19,5 +18,4 @@ export function timeAgo(at: number) {
   return hours === 1 ? "1h ago" : `${hours}h ago`;
 }
 
-export const shortAddress = (address: string) =>
-  `${address.slice(0, 6)}…${address.slice(-4)}`;
+export const shortAddress = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`;

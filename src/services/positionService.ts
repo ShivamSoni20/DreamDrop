@@ -1,10 +1,70 @@
 import type { CashoutQuote, Position, PreparedTransaction, RedemptionQuote } from "@/lib/types";
 import { delay, positions } from "./mock-db";
-export async function getPositions(_walletAddress?:string){return delay([...positions]);}
-export async function getPosition(id:string){const p=positions.find(v=>v.id===id);if(!p)throw new Error("Position not found");return delay(p);}
-export async function getCashoutQuote(id:string):Promise<CashoutQuote>{const p=positions.find(v=>v.id===id);if(!p)throw new Error("Position not found");const ok=p.id!=="pos-002"&&p.status==="ACTIVE";const price=ok?Math.max(.01,Number((p.cashoutPrice+(Math.random()-.5)*.02).toFixed(2))):null;return delay({id:`quote-${Date.now()}`,positionId:id,marketProbability:p.marketProbability,bestExecutablePrice:price,quantityRequested:p.quantity,executableQuantity:ok?p.quantity:0,estimatedProceeds:price===null?null:price*p.quantity,minimumProceeds:price===null?null:Number((price*p.quantity-.01).toFixed(2)),expiresAt:Date.now()+8000,canCashOut:ok});}
-export async function prepareCashout({positionId,quoteId}:{positionId:string;quoteId:string}):Promise<PreparedTransaction>{if(!quoteId)throw new Error("Quote required");const p=await getPosition(positionId);if(p.status!=="ACTIVE")throw new Error("Position cannot be cashed out");return {id:`cashout-${Date.now()}`,status:"AWAITING_SIGNATURE"};}
-export async function cashOutPosition(id:string,price:number){const p=await getPosition(id);if(p.status!=="ACTIVE")throw new Error("Position cannot be cashed out");p.status="SOLD";p.soldFor=price;p.cashoutTxHash=`0xcashout${Date.now()}`;return delay(p,900);}
-export async function getRedemptionQuote(id:string):Promise<RedemptionQuote>{const p=await getPosition(id);return{positionId:id,grossPayout:p.potentialGrossPayout,canRedeem:p.status==="WON"||p.status==="REDEEMABLE"||p.status==="VOIDED"};}
-export async function prepareRedemption(id:string):Promise<PreparedTransaction>{const q=await getRedemptionQuote(id);if(!q.canRedeem)throw new Error("This position is not redeemable");return{id:`redeem-${Date.now()}`,status:"AWAITING_SIGNATURE"};}
-export async function redeemPosition(id:string){await prepareRedemption(id);const p=await getPosition(id);p.status="REDEEMED";p.redemptionTxHash=`0xredeem${Date.now()}`;return delay(p,900);}
+export async function getPositions(_walletAddress?: string) {
+  return delay([...positions]);
+}
+export async function getPosition(id: string) {
+  const p = positions.find((v) => v.id === id);
+  if (!p) throw new Error("Position not found");
+  return delay(p);
+}
+export async function getCashoutQuote(id: string): Promise<CashoutQuote> {
+  const p = positions.find((v) => v.id === id);
+  if (!p) throw new Error("Position not found");
+  const ok = p.id !== "pos-002" && p.status === "ACTIVE";
+  const price = ok
+    ? Math.max(0.01, Number((p.cashoutPrice + (Math.random() - 0.5) * 0.02).toFixed(2)))
+    : null;
+  return delay({
+    id: `quote-${Date.now()}`,
+    positionId: id,
+    marketProbability: p.marketProbability,
+    bestExecutablePrice: price,
+    quantityRequested: p.quantity,
+    executableQuantity: ok ? p.quantity : 0,
+    estimatedProceeds: price === null ? null : price * p.quantity,
+    minimumProceeds: price === null ? null : Number((price * p.quantity - 0.01).toFixed(2)),
+    expiresAt: Date.now() + 8000,
+    canCashOut: ok,
+  });
+}
+export async function prepareCashout({
+  positionId,
+  quoteId,
+}: {
+  positionId: string;
+  quoteId: string;
+}): Promise<PreparedTransaction> {
+  if (!quoteId) throw new Error("Quote required");
+  const p = await getPosition(positionId);
+  if (p.status !== "ACTIVE") throw new Error("Position cannot be cashed out");
+  return { id: `cashout-${Date.now()}`, status: "AWAITING_SIGNATURE" };
+}
+export async function cashOutPosition(id: string, price: number) {
+  const p = await getPosition(id);
+  if (p.status !== "ACTIVE") throw new Error("Position cannot be cashed out");
+  p.status = "SOLD";
+  p.soldFor = price;
+  p.cashoutTxHash = `0xcashout${Date.now()}`;
+  return delay(p, 900);
+}
+export async function getRedemptionQuote(id: string): Promise<RedemptionQuote> {
+  const p = await getPosition(id);
+  return {
+    positionId: id,
+    grossPayout: p.potentialGrossPayout,
+    canRedeem: p.status === "WON" || p.status === "REDEEMABLE" || p.status === "VOIDED",
+  };
+}
+export async function prepareRedemption(id: string): Promise<PreparedTransaction> {
+  const q = await getRedemptionQuote(id);
+  if (!q.canRedeem) throw new Error("This position is not redeemable");
+  return { id: `redeem-${Date.now()}`, status: "AWAITING_SIGNATURE" };
+}
+export async function redeemPosition(id: string) {
+  await prepareRedemption(id);
+  const p = await getPosition(id);
+  p.status = "REDEEMED";
+  p.redemptionTxHash = `0xredeem${Date.now()}`;
+  return delay(p, 900);
+}

@@ -47,17 +47,13 @@ export function MarketCard({
           <p className="flex items-center gap-1 text-xs font-semibold text-up">
             <ArrowUp className="size-3.5" aria-hidden="true" /> UP
           </p>
-          <p className="mt-1 text-xl font-semibold text-up">
-            {pct(market.upProbability)}
-          </p>
+          <p className="mt-1 text-xl font-semibold text-up">{pct(market.upProbability)}</p>
         </div>
         <div className="rounded-xl bg-down-soft p-3">
           <p className="flex items-center gap-1 text-xs font-semibold text-down">
             <ArrowDown className="size-3.5" aria-hidden="true" /> DOWN
           </p>
-          <p className="mt-1 text-xl font-semibold text-down">
-            {pct(market.downProbability)}
-          </p>
+          <p className="mt-1 text-xl font-semibold text-down">{pct(market.downProbability)}</p>
         </div>
       </div>
 
@@ -65,7 +61,14 @@ export function MarketCard({
         <span className="text-muted-foreground">Ends in</span>
         <Countdown expiresAt={market.expiresAt} className="font-semibold" />
       </div>
-      {!selectable ? <><p className="mt-3 text-sm font-medium text-down">Too close to settlement</p><p className="mt-1 text-xs text-muted-foreground">This market is ending too soon to create a reliable DreamDrop campaign.</p></> : null}
+      {!selectable ? (
+        <>
+          <p className="mt-3 text-sm font-medium text-down">Too close to settlement</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            This market is ending too soon to create a reliable DreamDrop campaign.
+          </p>
+        </>
+      ) : null}
 
       {onSelect ? (
         <Button className="mt-4 w-full" disabled={!selectable} onClick={() => onSelect(market)}>
@@ -101,9 +104,7 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
         </div>
         <div>
           <p className="text-xs text-muted-foreground">Remaining</p>
-          <p className="font-semibold">
-            {campaign.totalDrops - campaign.claimedDrops}
-          </p>
+          <p className="font-semibold">{campaign.totalDrops - campaign.claimedDrops}</p>
         </div>
         <div>
           <p className="text-xs text-muted-foreground">Claim rate</p>
@@ -119,10 +120,7 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
           {campaign.status === "LIVE" ? null : "settled"}
         </span>
         <Button asChild size="sm" variant="outline">
-          <Link
-            to="/dashboard/campaign/$campaignId"
-            params={{ campaignId: campaign.id }}
-          >
+          <Link to="/dashboard/campaign/$campaignId" params={{ campaignId: campaign.id }}>
             View campaign
           </Link>
         </Button>

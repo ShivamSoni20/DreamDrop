@@ -2,11 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/dreamdrop/AppShell";
 import { MarketCard } from "@/components/dreamdrop/cards";
-import {
-  CardsSkeleton,
-  ErrorState,
-  PageHeader,
-} from "@/components/dreamdrop/states";
+import { CardsSkeleton, ErrorState, PageHeader } from "@/components/dreamdrop/states";
 import { getLiveMarkets } from "@/services/marketService";
 
 export const Route = createFileRoute("/explore")({
@@ -50,11 +46,7 @@ function Explore() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.map((market) => (
-              <MarketCard
-                key={market.id}
-                market={market}
-                actionLabel="View market"
-              />
+              <MarketCard key={market.id} market={market} actionLabel="View market" />
             ))}
           </div>
         )}

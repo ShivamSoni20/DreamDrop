@@ -16,10 +16,10 @@ contract DreamDropDistributor {
         bool closed;
     }
 
-    bytes32 private constant CLAIM_TYPEHASH = keccak256(
+    bytes32 public constant CLAIM_TYPEHASH = keccak256(
         "Claim(uint256 campaignId,uint256 claimIndex,address recipient,uint256 chainId,uint256 deadline,uint256 nonce)"
     );
-    bytes32 private immutable DOMAIN_SEPARATOR;
+    bytes32 public immutable DOMAIN_SEPARATOR;
 
     uint256 public nextCampaignId = 1;
     mapping(uint256 => Campaign) public campaigns;
@@ -28,7 +28,7 @@ contract DreamDropDistributor {
 
     error AlreadyClaimed();
     error AuthorizationExpired();
-    error CampaignClosed();
+    error CampaignAlreadyClosed();
     error CampaignExpired();
     error InvalidAuthorization();
     error InvalidCampaign();
@@ -36,23 +36,42 @@ contract DreamDropDistributor {
     error NotCreator();
     error TokenTransferFailed();
 
-    event CampaignCreated(uint256 indexed campaignId, address indexed creator, address indexed outcomeToken, bytes32 merkleRoot, uint64 claimDeadline);
+    event CampaignCreated(
+        uint256 indexed campaignId,
+        address indexed creator,
+        address indexed outcomeToken,
+        bytes32 merkleRoot,
+        uint64 claimDeadline
+    );
     event CampaignFunded(uint256 indexed campaignId, uint256 indexed tokenId, uint256 amount);
-    event DropClaimed(uint256 indexed campaignId, uint256 indexed claimIndex, address indexed recipient, uint256 tokenId, uint256 amount);
+    event DropClaimed(
+        uint256 indexed campaignId,
+        uint256 indexed claimIndex,
+        address indexed recipient,
+        uint256 tokenId,
+        uint256 amount
+    );
     event CampaignClosed(uint256 indexed campaignId);
 
     constructor() {
-        DOMAIN_SEPARATOR = keccak256(abi.encode(
-            keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-            keccak256("DreamDropDistributor"),
-            keccak256("1"),
-            block.chainid,
-            address(this)
-        ));
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256("DreamDropDistributor"),
+                keccak256("1"),
+                block.chainid,
+                address(this)
+            )
+        );
     }
 
-    function createCampaign(address outcomeToken, bytes32 merkleRoot, uint64 claimDeadline) external returns (uint256 campaignId) {
-        if (outcomeToken == address(0) || merkleRoot == bytes32(0) || claimDeadline <= block.timestamp) revert InvalidCampaign();
+    function createCampaign(address outcomeToken, bytes32 merkleRoot, uint64 claimDeadline)
+        external
+        returns (uint256 campaignId)
+    {
+        if (outcomeToken == address(0) || merkleRoot == bytes32(0) || claimDeadline <= block.timestamp) {
+            revert InvalidCampaign();
+        }
         campaignId = nextCampaignId++;
         campaigns[campaignId] = Campaign(msg.sender, outcomeToken, merkleRoot, claimDeadline, false);
         emit CampaignCreated(campaignId, msg.sender, outcomeToken, merkleRoot, claimDeadline);
@@ -62,8 +81,10 @@ contract DreamDropDistributor {
         Campaign memory campaign = campaigns[campaignId];
         if (campaign.creator == address(0)) revert InvalidCampaign();
         if (campaign.creator != msg.sender) revert NotCreator();
-        if (campaign.closed) revert CampaignClosed();
-        if (!IERC6909(campaign.outcomeToken).transferFrom(msg.sender, address(this), tokenId, amount)) revert TokenTransferFailed();
+        if (campaign.closed) revert CampaignAlreadyClosed();
+        if (!IERC6909(campaign.outcomeToken).transferFrom(msg.sender, address(this), tokenId, amount)) {
+            revert TokenTransferFailed();
+        }
         emit CampaignFunded(campaignId, tokenId, amount);
     }
 
@@ -81,16 +102,19 @@ contract DreamDropDistributor {
     ) external {
         Campaign memory campaign = campaigns[campaignId];
         if (campaign.creator == address(0)) revert InvalidCampaign();
-        if (campaign.closed) revert CampaignClosed();
+        if (campaign.closed) revert CampaignAlreadyClosed();
         if (block.timestamp > campaign.claimDeadline) revert CampaignExpired();
         if (block.timestamp > deadline) revert AuthorizationExpired();
         if (claimed[campaignId][claimIndex]) revert AlreadyClaimed();
         if (usedNonces[recipient][nonce]) revert InvalidAuthorization();
 
-        bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(campaignId, claimIndex, tokenId, amount, keccak256(abi.encode(secret))))));
+        bytes32 leaf = keccak256(
+            bytes.concat(keccak256(abi.encode(campaignId, claimIndex, tokenId, amount, keccak256(abi.encode(secret)))))
+        );
         if (!_verify(proof, campaign.merkleRoot, leaf)) revert InvalidProof();
 
-        bytes32 structHash = keccak256(abi.encode(CLAIM_TYPEHASH, campaignId, claimIndex, recipient, block.chainid, deadline, nonce));
+        bytes32 structHash =
+            keccak256(abi.encode(CLAIM_TYPEHASH, campaignId, claimIndex, recipient, block.chainid, deadline, nonce));
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
         if (_recover(digest, signature) != recipient) revert InvalidAuthorization();
 
@@ -104,6 +128,7 @@ contract DreamDropDistributor {
         Campaign storage campaign = campaigns[campaignId];
         if (campaign.creator == address(0)) revert InvalidCampaign();
         if (campaign.creator != msg.sender) revert NotCreator();
+        if (campaign.closed) revert CampaignAlreadyClosed();
         campaign.closed = true;
         emit CampaignClosed(campaignId);
     }

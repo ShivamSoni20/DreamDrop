@@ -2,13 +2,7 @@ import { useEffect, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function StepList({
-  steps,
-  activeIndex,
-}: {
-  steps: string[];
-  activeIndex: number;
-}) {
+export function StepList({ steps, activeIndex }: { steps: string[]; activeIndex: number }) {
   return (
     <ol className="space-y-3" aria-live="polite">
       {steps.map((step, i) => {

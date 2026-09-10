@@ -2,20 +2,12 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCountdown, pct, usd } from "@/lib/format";
-import type {
-  CampaignStatus,
-  MarketStatus,
-  PositionStatus,
-  Side,
-} from "@/lib/types";
+import type { CampaignStatus, MarketStatus, PositionStatus, Side } from "@/lib/types";
 
 export function LiveBadge({ label = "LIVE" }: { label?: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[0.65rem] font-semibold tracking-widest text-muted-foreground uppercase">
-      <span
-        className="animate-live size-1.5 rounded-full bg-live"
-        aria-hidden="true"
-      />
+      <span className="animate-live size-1.5 rounded-full bg-live" aria-hidden="true" />
       {label}
     </span>
   );
@@ -35,9 +27,7 @@ export function SideBadge({
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full font-semibold",
-        side === "UP"
-          ? "bg-up-soft text-up"
-          : "bg-down-soft text-down",
+        side === "UP" ? "bg-up-soft text-up" : "bg-down-soft text-down",
         size === "sm" ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm",
       )}
     >
@@ -73,26 +63,15 @@ export function StatusBadge({
 }
 
 export function useCountdown(expiresAt: number) {
-  const [remaining, setRemaining] = useState(() =>
-    Math.max(0, expiresAt - Date.now()),
-  );
+  const [remaining, setRemaining] = useState(() => Math.max(0, expiresAt - Date.now()));
   useEffect(() => {
-    const id = setInterval(
-      () => setRemaining(Math.max(0, expiresAt - Date.now())),
-      1000,
-    );
+    const id = setInterval(() => setRemaining(Math.max(0, expiresAt - Date.now())), 1000);
     return () => clearInterval(id);
   }, [expiresAt]);
   return remaining;
 }
 
-export function Countdown({
-  expiresAt,
-  className,
-}: {
-  expiresAt: number;
-  className?: string;
-}) {
+export function Countdown({ expiresAt, className }: { expiresAt: number; className?: string }) {
   const remaining = useCountdown(expiresAt);
   return (
     <span className={cn("font-mono tabular-nums", className)}>
@@ -135,9 +114,7 @@ export function Stat({
     <div className={className}>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-lg font-semibold">{value}</p>
-      {hint ? (
-        <p className="text-xs text-muted-foreground">{hint}</p>
-      ) : null}
+      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }
@@ -155,9 +132,7 @@ export function MetricCard({
 }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-soft sm:p-5">
-      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        {label}
-      </p>
+      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{label}</p>
       <p className="mt-2 text-2xl font-semibold sm:text-3xl">{value}</p>
       {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
       {spark ? <Sparkline values={spark} /> : null}
@@ -165,13 +140,7 @@ export function MetricCard({
   );
 }
 
-export function Sparkline({
-  values,
-  className,
-}: {
-  values: number[];
-  className?: string;
-}) {
+export function Sparkline({ values, className }: { values: number[]; className?: string }) {
   const max = Math.max(...values);
   const min = Math.min(...values);
   const range = max - min || 1;
@@ -214,10 +183,7 @@ export function MoneyRow({
     <div className="flex items-baseline justify-between gap-4">
       <span className="text-sm text-muted-foreground">{label}</span>
       <span
-        className={cn(
-          "font-mono tabular-nums",
-          emphasis ? "text-lg font-semibold" : "text-sm",
-        )}
+        className={cn("font-mono tabular-nums", emphasis ? "text-lg font-semibold" : "text-sm")}
       >
         {usd(value)}
       </span>

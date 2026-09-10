@@ -1,7 +1,100 @@
 import type { ClaimChallenge, ClaimedDrop, ClaimPreview, Position } from "@/lib/types";
 import { claims, delay, positions } from "./mock-db";
-export async function getClaimPreview(code: string): Promise<ClaimPreview> { const c = claims.find(v => v.code === code); if (!c) return delay({ code, status:"INVALID", campaignName:"", campaignId:"", asset:"BTC", potentialPayout:0, expiresAt:Date.now(), message:"" }); const { side:_side, marketProbability:_p, cashoutPrice:_c, claimedBy:_w, ...preview } = c; return delay(preview); }
-export async function createClaimChallenge({code,walletAddress}:{code:string;walletAddress:string}): Promise<ClaimChallenge> { const c=claims.find(v=>v.code===code); if(!c||c.status!=="AVAILABLE") throw new Error("This DreamDrop can no longer be claimed."); const expiresAt=Date.now()+60_000; return delay({id:`challenge-${code}-${Date.now()}`,code,walletAddress,expiresAt,message:`Authorize DreamDrop claim ${code} for ${walletAddress} on Somnia Shannon (50312). Expires ${expiresAt}.`}); }
-export async function submitClaim({code,walletAddress,challengeId,signature}:{code:string;walletAddress:string;challengeId:string;signature:string}): Promise<ClaimedDrop> { const c=claims.find(v=>v.code===code); if(!c||c.status!=="AVAILABLE"||!challengeId||!signature) throw new Error("This DreamDrop can no longer be claimed."); const tx=`0x${walletAddress.slice(2,10)}4c7a3e05186d2b4c9e0f7a35c81d`; const p:Position={id:`pos-${Date.now().toString().slice(-6)}`,campaignId:c.campaignId,claimId:`claim-${code}`,marketId:`${c.asset.toLowerCase()}-15m-001`,asset:c.asset,side:c.side,quantity:1,marketProbability:c.marketProbability,cashoutPrice:c.cashoutPrice,potentialPayout:c.potentialPayout,potentialGrossPayout:c.potentialPayout,status:"ACTIVE",expiresAt:c.expiresAt,claimedFrom:c.campaignName,claimedAt:Date.now(),claimTx:tx,claimTxHash:tx,tokenId:`#mock-${Math.floor(Math.random()*9000+1000)}`,network:"Somnia Shannon",probabilityHistory:[c.marketProbability-.05,c.marketProbability-.03,c.marketProbability-.01,c.marketProbability]}; c.status="ALREADY_CLAIMED"; c.claimedBy=walletAddress; positions.unshift(p); return delay({claimId:p.claimId,positionId:p.id,side:p.side,quantity:p.quantity,transactionHash:tx,status:"CONFIRMED",position:p},900); }
-export async function getClaimStatus(claimId:string){ return delay(positions.some(p=>p.claimId===claimId)?"CLAIMED" as const:"AVAILABLE" as const); }
+export async function getClaimPreview(code: string): Promise<ClaimPreview> {
+  const c = claims.find((v) => v.code === code);
+  if (!c)
+    return delay({
+      code,
+      status: "INVALID",
+      campaignName: "",
+      campaignId: "",
+      asset: "BTC",
+      potentialPayout: 0,
+      expiresAt: Date.now(),
+      message: "",
+    });
+  const { side: _side, marketProbability: _p, cashoutPrice: _c, claimedBy: _w, ...preview } = c;
+  return delay(preview);
+}
+export async function createClaimChallenge({
+  code,
+  walletAddress,
+}: {
+  code: string;
+  walletAddress: string;
+}): Promise<ClaimChallenge> {
+  const c = claims.find((v) => v.code === code);
+  if (!c || c.status !== "AVAILABLE") throw new Error("This DreamDrop can no longer be claimed.");
+  const expiresAt = Date.now() + 60_000;
+  return delay({
+    id: `challenge-${code}-${Date.now()}`,
+    code,
+    walletAddress,
+    expiresAt,
+    message: `Authorize DreamDrop claim ${code} for ${walletAddress} on Somnia Shannon (50312). Expires ${expiresAt}.`,
+  });
+}
+export async function submitClaim({
+  code,
+  walletAddress,
+  challengeId,
+  signature,
+}: {
+  code: string;
+  walletAddress: string;
+  challengeId: string;
+  signature: string;
+}): Promise<ClaimedDrop> {
+  const c = claims.find((v) => v.code === code);
+  if (!c || c.status !== "AVAILABLE" || !challengeId || !signature)
+    throw new Error("This DreamDrop can no longer be claimed.");
+  const tx = `0x${walletAddress.slice(2, 10)}4c7a3e05186d2b4c9e0f7a35c81d`;
+  const p: Position = {
+    id: `pos-${Date.now().toString().slice(-6)}`,
+    campaignId: c.campaignId,
+    claimId: `claim-${code}`,
+    marketId: `${c.asset.toLowerCase()}-15m-001`,
+    asset: c.asset,
+    side: c.side,
+    quantity: 1,
+    marketProbability: c.marketProbability,
+    cashoutPrice: c.cashoutPrice,
+    potentialPayout: c.potentialPayout,
+    potentialGrossPayout: c.potentialPayout,
+    status: "ACTIVE",
+    expiresAt: c.expiresAt,
+    claimedFrom: c.campaignName,
+    claimedAt: Date.now(),
+    claimTx: tx,
+    claimTxHash: tx,
+    tokenId: `#mock-${Math.floor(Math.random() * 9000 + 1000)}`,
+    network: "Somnia Shannon",
+    probabilityHistory: [
+      c.marketProbability - 0.05,
+      c.marketProbability - 0.03,
+      c.marketProbability - 0.01,
+      c.marketProbability,
+    ],
+  };
+  c.status = "ALREADY_CLAIMED";
+  c.claimedBy = walletAddress;
+  positions.unshift(p);
+  return delay(
+    {
+      claimId: p.claimId,
+      positionId: p.id,
+      side: p.side,
+      quantity: p.quantity,
+      transactionHash: tx,
+      status: "CONFIRMED",
+      position: p,
+    },
+    900,
+  );
+}
+export async function getClaimStatus(claimId: string) {
+  return delay(
+    positions.some((p) => p.claimId === claimId) ? ("CLAIMED" as const) : ("AVAILABLE" as const),
+  );
+}
 export const getClaim = getClaimPreview;

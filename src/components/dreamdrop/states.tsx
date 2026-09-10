@@ -20,10 +20,7 @@ export function PageHeader({
 }) {
   return (
     <div
-      className={cn(
-        "flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
-        className,
-      )}
+      className={cn("flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between", className)}
     >
       <div>
         {eyebrow ? (
@@ -32,9 +29,7 @@ export function PageHeader({
           </p>
         ) : null}
         <h1 className="mt-1 text-3xl font-semibold sm:text-4xl">{title}</h1>
-        {description ? (
-          <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p>
-        ) : null}
+        {description ? <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p> : null}
       </div>
       {actions ? <div className="flex gap-2">{actions}</div> : null}
     </div>
@@ -56,9 +51,7 @@ export function EmptyState({
         <Inbox className="size-5" aria-hidden="true" />
       </span>
       <h3 className="mt-4 text-lg font-semibold">{title}</h3>
-      <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-        {description}
-      </p>
+      <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
       {action ? <div className="mt-5">{action}</div> : null}
     </div>
   );
@@ -82,9 +75,7 @@ export function ErrorState({
         <AlertTriangle className="size-5" aria-hidden="true" />
       </span>
       <h3 className="mt-4 text-lg font-semibold">{title}</h3>
-      <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-        {description}
-      </p>
+      <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
       <div className="mt-5 flex justify-center gap-2">
         {onRetry ? (
           <Button onClick={onRetry} variant="default">
@@ -103,10 +94,7 @@ export function CardsSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
-        <div
-          key={i}
-          className="rounded-2xl border border-border bg-card p-5 shadow-soft"
-        >
+        <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-soft">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="mt-4 h-8 w-32" />
           <Skeleton className="mt-4 h-3 w-full" />

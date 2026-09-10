@@ -6,27 +6,15 @@ import { AppShell } from "@/components/dreamdrop/AppShell";
 import { MarketCard } from "@/components/dreamdrop/cards";
 import { PredictionTicket } from "@/components/dreamdrop/PredictionTicket";
 import { QRCard } from "@/components/dreamdrop/QRCard";
-import {
-  StepList,
-  useSimulatedSteps,
-} from "@/components/dreamdrop/TransactionProgress";
+import { StepList, useSimulatedSteps } from "@/components/dreamdrop/TransactionProgress";
 import { Countdown, LiveBadge } from "@/components/dreamdrop/primitives";
-import {
-  CardsSkeleton,
-  ErrorState,
-  PageHeader,
-} from "@/components/dreamdrop/states";
+import { CardsSkeleton, ErrorState, PageHeader } from "@/components/dreamdrop/states";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getLiveMarkets } from "@/services/marketService";
 import { createCampaign } from "@/services/campaignService";
 import type { Campaign, Market } from "@/lib/types";
@@ -103,7 +91,10 @@ function CreateCampaign() {
   const markets = useQuery({ queryKey: ["markets"], queryFn: getLiveMarkets });
   const { index } = useSimulatedSteps(TX_STEPS, running);
 
-  const { completeSets, totalDrops, upDrops, downDrops } = calculateCompleteSetDistribution(budget, positionSize);
+  const { completeSets, totalDrops, upDrops, downDrops } = calculateCompleteSetDistribution(
+    budget,
+    positionSize,
+  );
 
   const filtered = (markets.data ?? [])
     .filter((m) =>
@@ -140,9 +131,7 @@ function CreateCampaign() {
           <span className="animate-reveal mx-auto flex size-14 items-center justify-center rounded-full bg-up text-up-foreground">
             <PartyPopper className="size-6" aria-hidden="true" />
           </span>
-          <h1 className="mt-5 text-3xl font-semibold sm:text-4xl">
-            Your DreamDrops are live.
-          </h1>
+          <h1 className="mt-5 text-3xl font-semibold sm:text-4xl">Your DreamDrops are live.</h1>
           <p className="mt-3 text-muted-foreground">
             {created.totalDrops} prediction drops · {created.asset} ·{" "}
             {market ? <Countdown expiresAt={market.expiresAt} /> : null} remaining
@@ -176,10 +165,7 @@ function CreateCampaign() {
 
           <div className="mt-8 flex flex-wrap justify-center gap-2">
             <Button asChild>
-              <Link
-                to="/dashboard/campaign/$campaignId"
-                params={{ campaignId: created.id }}
-              >
+              <Link to="/dashboard/campaign/$campaignId" params={{ campaignId: created.id }}>
                 View campaign
               </Link>
             </Button>
@@ -274,9 +260,7 @@ function CreateCampaign() {
                   type="number"
                   min={1}
                   value={positionSize}
-                  onChange={(e) =>
-                    setPositionSize(Math.max(1, Number(e.target.value)))
-                  }
+                  onChange={(e) => setPositionSize(Math.max(1, Number(e.target.value)))}
                 />
               </div>
             </div>
@@ -284,9 +268,18 @@ function CreateCampaign() {
             <div className="space-y-3" aria-labelledby="complete-set-label">
               <Label id="complete-set-label">Complete Set Distribution</Label>
               <div className="grid grid-cols-3 gap-3 rounded-xl bg-surface p-4 text-center">
-                <div><p className="text-xs text-muted-foreground">UP</p><p className="font-semibold">{upDrops} Drops</p></div>
-                <div><p className="text-xs text-muted-foreground">DOWN</p><p className="font-semibold">{downDrops} Drops</p></div>
-                <div><p className="text-xs text-muted-foreground">Split</p><p className="font-semibold">50 / 50</p></div>
+                <div>
+                  <p className="text-xs text-muted-foreground">UP</p>
+                  <p className="font-semibold">{upDrops} Drops</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">DOWN</p>
+                  <p className="font-semibold">{downDrops} Drops</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Split</p>
+                  <p className="font-semibold">50 / 50</p>
+                </div>
               </div>
             </div>
 

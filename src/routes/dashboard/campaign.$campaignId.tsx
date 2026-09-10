@@ -11,11 +11,7 @@ import {
   SideBadge,
   StatusBadge,
 } from "@/components/dreamdrop/primitives";
-import {
-  CardsSkeleton,
-  ErrorState,
-  PageHeader,
-} from "@/components/dreamdrop/states";
+import { CardsSkeleton, ErrorState, PageHeader } from "@/components/dreamdrop/states";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -173,9 +169,7 @@ function CampaignDetail() {
                     <SideBadge side={claim.side} asset={c.asset} size="sm" />
                   </TableCell>
                   <TableCell className="font-mono text-xs">{claim.wallet}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">
-                    {claim.ago}
-                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">{claim.ago}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

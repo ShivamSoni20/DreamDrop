@@ -73,10 +73,7 @@ export function SiteHeader() {
                     className="justify-start"
                     onClick={() => setOpen(false)}
                   >
-                    <Link
-                      to={link.to}
-                      {...("hash" in link ? { hash: link.hash } : {})}
-                    >
+                    <Link to={link.to} {...("hash" in link ? { hash: link.hash } : {})}>
                       {link.label}
                     </Link>
                   </Button>

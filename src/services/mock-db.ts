@@ -1,16 +1,28 @@
-import type {
-  ActivityEvent,
-  Campaign,
-  Market,
-  Position,
-} from "@/lib/types";
+import type { ActivityEvent, Campaign, Market, Position } from "@/lib/types";
 import type { Asset, ClaimPreviewStatus, Side } from "@/lib/types";
-export interface StoredClaim { code: string; status: ClaimPreviewStatus; campaignName: string; campaignId: string; asset: Asset; side: Side; potentialPayout: number; marketProbability: number; cashoutPrice: number; expiresAt: number; message: string; claimedBy?: string; }
+export interface StoredClaim {
+  code: string;
+  status: ClaimPreviewStatus;
+  campaignName: string;
+  campaignId: string;
+  asset: Asset;
+  side: Side;
+  potentialPayout: number;
+  marketProbability: number;
+  cashoutPrice: number;
+  expiresAt: number;
+  message: string;
+  claimedBy?: string;
+}
 
 const now = () => Date.now();
 const inMinutes = (m: number) => now() + m * 60_000;
 const minutesAgo = (m: number) => now() - m * 60_000;
-const collateral = { address: "0x0000000000000000000000000000000000000001", symbol: "tUSDC", decimals: 6 } as const;
+const collateral = {
+  address: "0x0000000000000000000000000000000000000001",
+  symbol: "tUSDC",
+  decimals: 6,
+} as const;
 
 export const markets: Market[] = [
   {
@@ -90,8 +102,7 @@ export const campaigns: Campaign[] = [
     downDistributed: 7,
     cashOuts: 3,
     status: "LIVE",
-    message:
-      "You just received a live BTC prediction from Somnia Hacker Night.",
+    message: "You just received a live BTC prediction from Somnia Hacker Night.",
     createdAt: minutesAgo(24),
   },
   {
@@ -150,7 +161,10 @@ export const campaigns: Campaign[] = [
 export const positions: Position[] = [
   {
     id: "pos-001",
-    campaignId: "cmp-001", claimId: "claim-demo", marketId: "btc-15m-001", potentialGrossPayout: 1,
+    campaignId: "cmp-001",
+    claimId: "claim-demo",
+    marketId: "btc-15m-001",
+    potentialGrossPayout: 1,
     asset: "BTC",
     side: "UP",
     quantity: 1,
@@ -168,7 +182,10 @@ export const positions: Position[] = [
   },
   {
     id: "pos-002",
-    campaignId: "cmp-004", claimId: "claim-eth-down", marketId: "eth-15m-001", potentialGrossPayout: 1,
+    campaignId: "cmp-004",
+    claimId: "claim-eth-down",
+    marketId: "eth-15m-001",
+    potentialGrossPayout: 1,
     asset: "ETH",
     side: "DOWN",
     quantity: 1,
@@ -186,7 +203,10 @@ export const positions: Position[] = [
   },
   {
     id: "pos-003",
-    campaignId: "cmp-002", claimId: "claim-won", marketId: "btc-15m-001", potentialGrossPayout: 1,
+    campaignId: "cmp-002",
+    claimId: "claim-won",
+    marketId: "btc-15m-001",
+    potentialGrossPayout: 1,
     asset: "BTC",
     side: "UP",
     quantity: 1,
@@ -204,7 +224,10 @@ export const positions: Position[] = [
   },
   {
     id: "pos-004",
-    campaignId: "cmp-002", claimId: "claim-lost", marketId: "btc-15m-001", potentialGrossPayout: 1,
+    campaignId: "cmp-002",
+    claimId: "claim-lost",
+    marketId: "btc-15m-001",
+    potentialGrossPayout: 1,
     asset: "BTC",
     side: "DOWN",
     quantity: 1,
@@ -222,7 +245,10 @@ export const positions: Position[] = [
   },
   {
     id: "pos-005",
-    campaignId: "cmp-003", claimId: "claim-sold", marketId: "eth-15m-001", potentialGrossPayout: 1,
+    campaignId: "cmp-003",
+    claimId: "claim-sold",
+    marketId: "eth-15m-001",
+    potentialGrossPayout: 1,
     asset: "ETH",
     side: "UP",
     quantity: 1,
@@ -253,8 +279,7 @@ export const claims: StoredClaim[] = [
     marketProbability: 0.57,
     cashoutPrice: 0.54,
     expiresAt: inMinutes(8.35),
-    message:
-      "You just received a live BTC prediction from Somnia Hacker Night.",
+    message: "You just received a live BTC prediction from Somnia Hacker Night.",
   },
   {
     code: "eth-down",
@@ -305,5 +330,5 @@ export const activity: ActivityEvent[] = [
   { id: "act-5", kind: "CLAIM", text: "0x2f…c1 claimed ETH DOWN", at: minutesAgo(44) },
 ];
 
-export const delay = <T,>(value: T, ms = 420): Promise<T> =>
+export const delay = <T>(value: T, ms = 420): Promise<T> =>
   new Promise((resolve) => setTimeout(() => resolve(value), ms));

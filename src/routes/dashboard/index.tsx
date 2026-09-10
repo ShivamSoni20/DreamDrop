@@ -4,12 +4,7 @@ import { Plus } from "lucide-react";
 import { AppShell } from "@/components/dreamdrop/AppShell";
 import { ActivityItem, CampaignCard } from "@/components/dreamdrop/cards";
 import { MetricCard } from "@/components/dreamdrop/primitives";
-import {
-  CardsSkeleton,
-  EmptyState,
-  ErrorState,
-  PageHeader,
-} from "@/components/dreamdrop/states";
+import { CardsSkeleton, EmptyState, ErrorState, PageHeader } from "@/components/dreamdrop/states";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getActivity, getCampaigns } from "@/services/campaignService";
@@ -40,9 +35,7 @@ function Dashboard() {
   const list = campaigns.data ?? [];
   const dropsCreated = list.reduce((sum, c) => sum + c.totalDrops, 0);
   const dropsClaimed = list.reduce((sum, c) => sum + c.claimedDrops, 0);
-  const claimRate = dropsCreated
-    ? Math.round((dropsClaimed / dropsCreated) * 100)
-    : 0;
+  const claimRate = dropsCreated ? Math.round((dropsClaimed / dropsCreated) * 100) : 0;
 
   return (
     <AppShell>
