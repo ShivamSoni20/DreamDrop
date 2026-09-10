@@ -20,4 +20,12 @@ One whole testnet contract is 1,000,000 raw units. Complete-set minting, balance
 
 Run `bun run dreamdex:smoke` with `DREAMDEX_SMOKE_PRIVATE_KEY` set to a dedicated funded Shannon wallet. The default performs read-only discovery. Set `DREAMDEX_SMOKE_WRITE=true` only to mint a one-contract complete set and reconcile both outcome balances. This has not been executed without a funded wallet.
 
-The read smoke was successfully exercised on 2026-09-11 against Trading BTC/tUSDC market `0x0000000000000000000000000000000000000000000000000000000000019651`, canonical pool `0xe66c0C1FE6a10D67Ee9772dFb881f2611F9109DC`, and outcome token `0xB52c5934113Af5c0Bb20eb3C72290C8215f755b9`. This is time-sensitive evidence, not a hard-coded market configuration. Write-mode minting remains unverified because no funded smoke-test key was configured.
+The latest read smoke on 2026-09-11 resolved Trading ETH/tUSDC market `0x0000000000000000000000000000000000000000000000000000000000019656`, canonical pool `0xe66c0C1FE6a10D67Ee9772dFb881f2611F9109DC`, outcome token `0xB52c5934113Af5c0Bb20eb3C72290C8215f755b9`, YES ID ending `7312`, and NO ID ending `7313`. This is time-sensitive evidence, not hard-coded configuration. Write-mode minting remains unverified because no funded smoke-test key was configured.
+
+Deploy the tested Distributor only with a dedicated funded Shannon deployer:
+
+```bash
+forge script contracts/script/DeployDreamDropDistributor.s.sol:DeployDreamDropDistributor --root contracts --rpc-url shannon --private-key "$DEPLOYER_PRIVATE_KEY" --broadcast -vvvv
+```
+
+No Distributor address or deployment transaction is recorded yet; none has been fabricated.

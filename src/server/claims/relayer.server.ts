@@ -99,6 +99,7 @@ interface RequestRow {
   status: string;
   tx_hash: string | null;
   used_at: string | null;
+  recipient_balance_before: string | null;
 }
 
 function toResult(claim: ClaimRow, positionRow: Record<string, unknown>): ClaimedDrop {
@@ -161,7 +162,7 @@ export async function relayLiveClaim(input: {
     if (!existing) throw new Error("Confirmed claim is missing its position record.");
     return toResult(claim, existing);
   }
-  if (request.used_at || request.status !== "PENDING")
+  if (request.used_at || !["PENDING", "RESERVED", "SUBMITTED"].includes(request.status))
     throw new Error("Claim challenge has already been used.");
 
   const challenge: StoredClaimChallenge = {
@@ -182,6 +183,7 @@ export async function relayLiveClaim(input: {
     wallet: recipient,
     expectedChainId: 50312,
     expectedDistributor: env.DREAMDROP_DISTRIBUTOR_ADDRESS as Address,
+    ...(request.status === "SUBMITTED" ? { now: challenge.expiresAt } : {}),
   });
   const reserved = await reserveClaim(
     claim.id,
@@ -189,7 +191,8 @@ export async function relayLiveClaim(input: {
     new Date(Date.now() + 120_000).toISOString(),
   );
   if (!reserved) throw new Error("This DreamDrop is being claimed by another request.");
-  await updateRelayerRequest(request.id, { status: "RESERVED", signature: input.signature });
+  if (request.status === "PENDING")
+    await updateRelayerRequest(request.id, { status: "RESERVED", signature: input.signature });
 
   const account = privateKeyToAccount(env.RELAYER_PRIVATE_KEY as Hex);
   const transport = http(env.SOMNIA_RPC_URL);
@@ -200,12 +203,17 @@ export async function relayLiveClaim(input: {
   const outcomeToken = (
     claim as unknown as { campaigns: CampaignRow & { outcome_token_address: Address } }
   ).campaigns.outcome_token_address;
-  const before = await publicClient.readContract({
-    address: outcomeToken,
-    abi: erc6909Abi,
-    functionName: "balanceOf",
-    args: [recipient, tokenId],
-  });
+  const before =
+    request.recipient_balance_before === null
+      ? await publicClient.readContract({
+          address: outcomeToken,
+          abi: erc6909Abi,
+          functionName: "balanceOf",
+          args: [recipient, tokenId],
+        })
+      : BigInt(request.recipient_balance_before);
+  if (request.recipient_balance_before === null)
+    await updateRelayerRequest(request.id, { recipient_balance_before: before.toString() });
   const args = [
     challenge.campaignId,
     challenge.claimIndex,
@@ -218,15 +226,22 @@ export async function relayLiveClaim(input: {
     challenge.nonce,
     input.signature as Hex,
   ] as const;
-  const simulation = await publicClient.simulateContract({
-    address: challenge.verifyingContract,
-    abi: distributorAbi,
-    functionName: "claim",
-    args,
-    account,
-  });
-  const hash = await walletClient.writeContract(simulation.request);
-  await updateRelayerRequest(request.id, { status: "SUBMITTED", tx_hash: hash });
+  let hash: Hex;
+  if (request.status === "SUBMITTED") {
+    if (!request.tx_hash)
+      throw new Error("Submitted relayer request is missing its transaction hash.");
+    hash = request.tx_hash as Hex;
+  } else {
+    const simulation = await publicClient.simulateContract({
+      address: challenge.verifyingContract,
+      abi: distributorAbi,
+      functionName: "claim",
+      args,
+      account,
+    });
+    hash = await walletClient.writeContract(simulation.request);
+    await updateRelayerRequest(request.id, { status: "SUBMITTED", tx_hash: hash });
+  }
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
   if (receipt.status !== "success") throw new Error(`Claim transaction reverted: ${hash}`);
   const event = receipt.logs.some((log) => {

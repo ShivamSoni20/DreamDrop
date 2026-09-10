@@ -18,3 +18,5 @@ flowchart LR
 Mock mode is an intentional, isolated demo. Live mode uses injected wallet state, Shannon chain state, server persistence, and real receipts; it must never synthesize successful hashes or balances.
 
 The database is not authoritative for blockchain facts. Writes revalidate market state, and confirmed actions reconcile transaction receipts and outcome-token balances before application state advances.
+
+Server-only modules live under `src/server`. Public claim services cross the TanStack Start server-function boundary; browser bundles receive safe previews and typed data, never the Supabase service key, relayer key, Merkle proof, token side, or encrypted secret. The live relayer reserves a claim in Postgres before submitting and persists a position only after receipt, event, and balance reconciliation.

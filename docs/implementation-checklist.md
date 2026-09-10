@@ -9,12 +9,16 @@
 - [x] Standalone DreamDEX market/read/mint/balance smoke script
 - [x] ERC-6909 Distributor with Merkle claims and recipient authorization
 - [x] PostgreSQL/Supabase schema with RLS-denied browser access
-- [x] Distributor contract tests (20 passing Foundry tests)
+- [x] Distributor contract tests (30 passing Foundry tests)
+- [x] Live/mock DreamDEX adapter isolation and structured Shannon normalization
+- [x] Server-only Supabase repositories and follow-up claim migration
+- [x] Secure claim codes, encrypted secrets, Solidity-compatible Merkle generation and proofs
+- [x] Persisted, server-authoritative EIP-712 challenges and signature verification
+- [x] Relayer implementation with reservation, receipt/event checks, and exact balance reconciliation
+- [x] Foundry Shannon deployment script
 - [ ] Deploy Distributor to Shannon and record address/transaction
-- [ ] Persistent server repositories and wallet-authenticated endpoints
-- [ ] Secure claim generation, proofs, challenge storage, and idempotent relayer
 - [ ] Wire creator mint/fund transactions to the approved UI
-- [ ] Verify recipient outcome-token balance after claim
+- [ ] Execute and verify the relayer recipient balance check on Shannon
 
 ## P1
 
@@ -28,6 +32,7 @@
 - [x] CI skeleton for app and contracts
 - [ ] Complete README and integration/security/demo docs
 - [x] Shannon explorer URL helpers
-- [ ] Deployment configuration and responsive end-to-end QA
+- [x] Deployment configuration and executable Foundry deployment command
+- [ ] Responsive end-to-end QA with funded Wallet A and distinct Wallet B
 
 Items requiring credentials or funds must remain unchecked until actually exercised. Live mode must fail clearly rather than fall back to mock data.

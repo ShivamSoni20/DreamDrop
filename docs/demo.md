@@ -10,3 +10,5 @@
 8. Reveal the position and open the real Shannon explorer transaction.
 
 Do not demo live mode until every live dependency is configured; it must never fall back to simulated success.
+
+Current external prerequisites are a Supabase project with both migrations applied, a funded Shannon deployer/relayer, Creator Wallet A with STT and supported tUSDC, and a distinct Recipient Wallet B. Until those exist, the creator write path remains deliberately disabled in live mode.

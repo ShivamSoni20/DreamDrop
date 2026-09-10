@@ -20,6 +20,7 @@ import { createCampaign } from "@/services/campaignService";
 import type { Campaign, Market } from "@/lib/types";
 import { usd } from "@/lib/format";
 import { calculateCompleteSetDistribution, canCreateCampaignForMarket } from "@/lib/campaign-rules";
+import { appConfig } from "@/lib/config";
 
 export const Route = createFileRoute("/create")({
   head: () => ({
@@ -191,7 +192,11 @@ function CreateCampaign() {
               ? "Build your DreamDrop"
               : "Ready to drop?"
         }
-        description="Mock market data for now — the flow is the real thing."
+        description={
+          appConfig.dataMode === "mock"
+            ? "Demo market data — the complete creation flow remains fully explorable."
+            : "Live Shannon markets — every write is confirmed on-chain before the campaign goes live."
+        }
       />
 
       <div className="mt-6">

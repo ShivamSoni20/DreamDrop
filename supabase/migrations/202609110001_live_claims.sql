@@ -22,6 +22,7 @@ create unique index claims_code_hash_idx
 
 alter table public.relayer_requests
   add column typed_data jsonb,
+  add column recipient_balance_before numeric(78,0),
   add column used_at timestamptz;
 
 alter table public.relayer_requests
