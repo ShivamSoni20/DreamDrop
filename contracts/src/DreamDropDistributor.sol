@@ -23,6 +23,7 @@ contract DreamDropDistributor {
 
     uint256 public nextCampaignId = 1;
     mapping(uint256 => Campaign) public campaigns;
+    mapping(uint256 => mapping(uint256 => uint256)) public campaignInventory;
     mapping(uint256 => mapping(uint256 => bool)) public claimed;
     mapping(address => mapping(uint256 => bool)) public usedNonces;
 
@@ -32,6 +33,8 @@ contract DreamDropDistributor {
     error CampaignExpired();
     error InvalidAuthorization();
     error InvalidCampaign();
+    error InsufficientCampaignInventory();
+    error InventoryStillActive();
     error InvalidProof();
     error NotCreator();
     error TokenTransferFailed();
@@ -44,6 +47,9 @@ contract DreamDropDistributor {
         uint64 claimDeadline
     );
     event CampaignFunded(uint256 indexed campaignId, uint256 indexed tokenId, uint256 amount);
+    event CampaignInventoryWithdrawn(
+        uint256 indexed campaignId, uint256 indexed tokenId, address indexed receiver, uint256 amount
+    );
     event DropClaimed(
         uint256 indexed campaignId,
         uint256 indexed claimIndex,
@@ -85,6 +91,7 @@ contract DreamDropDistributor {
         if (!IERC6909(campaign.outcomeToken).transferFrom(msg.sender, address(this), tokenId, amount)) {
             revert TokenTransferFailed();
         }
+        campaignInventory[campaignId][tokenId] += amount;
         emit CampaignFunded(campaignId, tokenId, amount);
     }
 
@@ -105,8 +112,10 @@ contract DreamDropDistributor {
         if (campaign.closed) revert CampaignAlreadyClosed();
         if (block.timestamp > campaign.claimDeadline) revert CampaignExpired();
         if (block.timestamp > deadline) revert AuthorizationExpired();
+        if (recipient == address(0)) revert InvalidAuthorization();
         if (claimed[campaignId][claimIndex]) revert AlreadyClaimed();
         if (usedNonces[recipient][nonce]) revert InvalidAuthorization();
+        if (campaignInventory[campaignId][tokenId] < amount) revert InsufficientCampaignInventory();
 
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(campaignId, claimIndex, tokenId, amount, keccak256(abi.encode(secret)))))
@@ -120,6 +129,7 @@ contract DreamDropDistributor {
 
         claimed[campaignId][claimIndex] = true;
         usedNonces[recipient][nonce] = true;
+        campaignInventory[campaignId][tokenId] -= amount;
         if (!IERC6909(campaign.outcomeToken).transfer(recipient, tokenId, amount)) revert TokenTransferFailed();
         emit DropClaimed(campaignId, claimIndex, recipient, tokenId, amount);
     }
@@ -131,6 +141,24 @@ contract DreamDropDistributor {
         if (campaign.closed) revert CampaignAlreadyClosed();
         campaign.closed = true;
         emit CampaignClosed(campaignId);
+    }
+
+    function withdrawRemaining(uint256 campaignId, uint256 tokenId, address receiver)
+        external
+        returns (uint256 amount)
+    {
+        Campaign memory campaign = campaigns[campaignId];
+        if (campaign.creator == address(0) || receiver == address(0)) revert InvalidCampaign();
+        if (campaign.creator != msg.sender) revert NotCreator();
+        if (!campaign.closed && block.timestamp <= campaign.claimDeadline) revert InventoryStillActive();
+
+        amount = campaignInventory[campaignId][tokenId];
+        if (amount == 0) revert InsufficientCampaignInventory();
+        campaignInventory[campaignId][tokenId] = 0;
+        if (!IERC6909(campaign.outcomeToken).transfer(receiver, tokenId, amount)) {
+            revert TokenTransferFailed();
+        }
+        emit CampaignInventoryWithdrawn(campaignId, tokenId, receiver, amount);
     }
 
     function _verify(bytes32[] calldata proof, bytes32 root, bytes32 leaf) private pure returns (bool) {

@@ -15,6 +15,11 @@ interface Vm {
 contract MockERC6909 {
     mapping(address => mapping(uint256 => uint256)) public balanceOf;
     mapping(address => mapping(address => bool)) public isOperator;
+    bool public failTransfers;
+
+    function setFailTransfers(bool fail) external {
+        failTransfers = fail;
+    }
 
     function mint(address receiver, uint256 id, uint256 amount) external {
         balanceOf[receiver][id] += amount;
@@ -25,11 +30,13 @@ contract MockERC6909 {
     }
 
     function transfer(address receiver, uint256 id, uint256 amount) external returns (bool) {
+        if (failTransfers) return false;
         _transfer(msg.sender, receiver, id, amount);
         return true;
     }
 
     function transferFrom(address sender, address receiver, uint256 id, uint256 amount) external returns (bool) {
+        if (failTransfers) return false;
         require(msg.sender == sender || isOperator[sender][msg.sender], "NOT_AUTHORIZED");
         _transfer(sender, receiver, id, amount);
         return true;
@@ -109,6 +116,34 @@ contract DreamDropDistributorTest {
         distributor.fundCampaign(id, TOKEN_ID, AMOUNT);
         _assertEq(token.balanceOf(address(distributor), TOKEN_ID), AMOUNT);
         _assertEq(token.balanceOf(address(this), TOKEN_ID), AMOUNT * 9);
+        _assertEq(distributor.campaignInventory(id, TOKEN_ID), AMOUNT);
+    }
+
+    function testCampaignsSharingTokenIdKeepIndependentInventory() public {
+        uint256 first = _createSingleClaimCampaign();
+        uint256 second = distributor.createCampaign(
+            address(token), _leaf(2, 0, TOKEN_ID, AMOUNT, keccak256("second")), campaignDeadline
+        );
+        distributor.fundCampaign(first, TOKEN_ID, AMOUNT);
+        distributor.fundCampaign(second, TOKEN_ID, AMOUNT * 2);
+
+        _claim(first, 0, TOKEN_ID, AMOUNT, SECRET, recipient, block.timestamp + 1 hours, NONCE, RECIPIENT_KEY);
+        _assertEq(distributor.campaignInventory(first, TOKEN_ID), 0);
+        _assertEq(distributor.campaignInventory(second, TOKEN_ID), AMOUNT * 2);
+    }
+
+    function testClaimRejectsInsufficientCampaignInventory() public {
+        uint256 id = _createSingleClaimCampaign();
+        vm.expectRevert(DreamDropDistributor.InsufficientCampaignInventory.selector);
+        _claim(id, 0, TOKEN_ID, AMOUNT, SECRET, recipient, block.timestamp + 1 hours, NONCE, RECIPIENT_KEY);
+    }
+
+    function testFundingRejectsFalseTokenTransfer() public {
+        uint256 id = _createSingleClaimCampaign();
+        token.setFailTransfers(true);
+        vm.expectRevert(DreamDropDistributor.TokenTransferFailed.selector);
+        distributor.fundCampaign(id, TOKEN_ID, AMOUNT);
+        _assertEq(distributor.campaignInventory(id, TOKEN_ID), 0);
     }
 
     function testValidMerkleClaimTransfersExactTokenAndAmount() public {
@@ -116,6 +151,7 @@ contract DreamDropDistributorTest {
         _claim(id, 0, TOKEN_ID, AMOUNT, SECRET, recipient, block.timestamp + 1 hours, NONCE, RECIPIENT_KEY);
         _assertEq(token.balanceOf(recipient, TOKEN_ID), AMOUNT);
         _assertEq(token.balanceOf(address(distributor), TOKEN_ID), 0);
+        _assertEq(distributor.campaignInventory(id, TOKEN_ID), 0);
         require(distributor.claimed(id, 0), "claim index not consumed");
     }
 
@@ -180,6 +216,69 @@ contract DreamDropDistributorTest {
         distributor.closeCampaign(id);
         vm.expectRevert(DreamDropDistributor.CampaignAlreadyClosed.selector);
         _claim(id, 0, TOKEN_ID, AMOUNT, SECRET, recipient, block.timestamp + 1 hours, NONCE, RECIPIENT_KEY);
+    }
+
+    function testClaimRejectsFalseTokenTransferWithoutConsumingState() public {
+        uint256 id = _fundSingleClaimCampaign();
+        token.setFailTransfers(true);
+        vm.expectRevert(DreamDropDistributor.TokenTransferFailed.selector);
+        _claim(id, 0, TOKEN_ID, AMOUNT, SECRET, recipient, block.timestamp + 1 hours, NONCE, RECIPIENT_KEY);
+        require(!distributor.claimed(id, 0), "failed transfer consumed claim");
+        require(!distributor.usedNonces(recipient, NONCE), "failed transfer consumed nonce");
+        _assertEq(distributor.campaignInventory(id, TOKEN_ID), AMOUNT);
+    }
+
+    function testOnlyCreatorCanWithdrawRemaining() public {
+        uint256 id = _fundSingleClaimCampaign();
+        distributor.closeCampaign(id);
+        vm.prank(other);
+        vm.expectRevert(DreamDropDistributor.NotCreator.selector);
+        distributor.withdrawRemaining(id, TOKEN_ID, other);
+    }
+
+    function testCannotWithdrawWhileCampaignActive() public {
+        uint256 id = _fundSingleClaimCampaign();
+        vm.expectRevert(DreamDropDistributor.InventoryStillActive.selector);
+        distributor.withdrawRemaining(id, TOKEN_ID, address(this));
+    }
+
+    function testCreatorWithdrawsRemainingAfterClose() public {
+        uint256 id = _fundSingleClaimCampaign();
+        uint256 beforeBalance = token.balanceOf(address(this), TOKEN_ID);
+        distributor.closeCampaign(id);
+        uint256 withdrawn = distributor.withdrawRemaining(id, TOKEN_ID, other);
+        _assertEq(withdrawn, AMOUNT);
+        _assertEq(token.balanceOf(other, TOKEN_ID), AMOUNT);
+        _assertEq(token.balanceOf(address(this), TOKEN_ID), beforeBalance);
+        _assertEq(distributor.campaignInventory(id, TOKEN_ID), 0);
+    }
+
+    function testCreatorWithdrawsRemainingAfterExpiry() public {
+        uint256 id = _fundSingleClaimCampaign();
+        vm.warp(uint256(campaignDeadline) + 1);
+        distributor.withdrawRemaining(id, TOKEN_ID, address(this));
+        _assertEq(distributor.campaignInventory(id, TOKEN_ID), 0);
+        _assertEq(token.balanceOf(address(this), TOKEN_ID), AMOUNT * 10);
+    }
+
+    function testCannotWithdrawInventoryTwice() public {
+        uint256 id = _fundSingleClaimCampaign();
+        distributor.closeCampaign(id);
+        distributor.withdrawRemaining(id, TOKEN_ID, address(this));
+        vm.expectRevert(DreamDropDistributor.InsufficientCampaignInventory.selector);
+        distributor.withdrawRemaining(id, TOKEN_ID, address(this));
+    }
+
+    function testWithdrawalCannotConsumeAnotherCampaignInventory() public {
+        uint256 first = _fundSingleClaimCampaign();
+        uint256 second = distributor.createCampaign(
+            address(token), _leaf(2, 0, TOKEN_ID, AMOUNT, keccak256("second")), campaignDeadline
+        );
+        distributor.fundCampaign(second, TOKEN_ID, AMOUNT);
+        distributor.closeCampaign(first);
+        distributor.withdrawRemaining(first, TOKEN_ID, address(this));
+        _assertEq(distributor.campaignInventory(second, TOKEN_ID), AMOUNT);
+        _assertEq(token.balanceOf(address(distributor), TOKEN_ID), AMOUNT);
     }
 
     function testDomainSeparatorMatchesNameVersionChainAndContract() public view {
