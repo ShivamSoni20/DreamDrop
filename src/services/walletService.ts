@@ -1,5 +1,6 @@
 import type { ClaimChallenge } from "@/lib/types";
 import { appConfig } from "@/lib/config";
+import { serializeClaimTypedData } from "@/lib/claim-authorization";
 export type WalletConnectionStatus = "DISCONNECTED" | "CONNECTING" | "CONNECTED" | "WRONG_NETWORK";
 export interface ConnectedWallet {
   address: string;
@@ -34,7 +35,7 @@ export async function signClaimAuthorization(payload: ClaimChallenge) {
   if (!account || account.toLowerCase() !== payload.walletAddress.toLowerCase())
     throw new Error("Connect the wallet this claim was prepared for.");
   return provider.request({
-    method: "personal_sign",
-    params: [payload.message, account],
+    method: "eth_signTypedData_v4",
+    params: [account, serializeClaimTypedData(payload.typedData)],
   }) as Promise<string>;
 }

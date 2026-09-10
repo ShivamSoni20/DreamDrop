@@ -1,5 +1,7 @@
 import type { ClaimChallenge, ClaimedDrop, ClaimPreview, Position } from "@/lib/types";
 import { claims, delay, positions } from "./mock-db";
+import { buildClaimTypedData } from "@/lib/claim-authorization";
+import { appConfig } from "@/lib/config";
 export async function getClaimPreview(code: string): Promise<ClaimPreview> {
   const c = claims.find((v) => v.code === code);
   if (!c)
@@ -26,12 +28,23 @@ export async function createClaimChallenge({
   const c = claims.find((v) => v.code === code);
   if (!c || c.status !== "AVAILABLE") throw new Error("This DreamDrop can no longer be claimed.");
   const expiresAt = Date.now() + 60_000;
+  const deadline = BigInt(Math.floor(expiresAt / 1000));
+  const nonce = BigInt(Date.now());
   return delay({
     id: `challenge-${code}-${Date.now()}`,
     code,
     walletAddress,
     expiresAt,
     message: `Authorize DreamDrop claim ${code} for ${walletAddress} on Somnia Shannon (50312). Expires ${expiresAt}.`,
+    typedData: buildClaimTypedData({
+      campaignId: 1n,
+      claimIndex: 0n,
+      recipient: walletAddress as `0x${string}`,
+      chainId: appConfig.chainId,
+      deadline,
+      nonce,
+      verifyingContract: "0x0000000000000000000000000000000000000001",
+    }),
   });
 }
 export async function submitClaim({

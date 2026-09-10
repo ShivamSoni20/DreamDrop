@@ -101,6 +101,7 @@ export interface ClaimChallenge {
   walletAddress: string;
   message: string;
   expiresAt: number;
+  typedData: import("./claim-authorization").ClaimTypedData;
 }
 export interface ClaimedDrop {
   claimId: string;
