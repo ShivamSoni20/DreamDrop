@@ -2,7 +2,43 @@ import type { ClaimChallenge, ClaimedDrop, ClaimPreview, Position } from "@/lib/
 import { claims, delay, positions } from "./mock-db";
 import { buildClaimTypedData } from "@/lib/claim-authorization";
 import { appConfig } from "@/lib/config";
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+
+const livePreview = createServerFn({ method: "GET" })
+  .validator(z.object({ code: z.string().min(1).max(256) }))
+  .handler(async ({ data }) => {
+    const { getLiveClaimPreview } = await import("@/server/claims/live-claim.server");
+    return getLiveClaimPreview(data.code);
+  });
+
+const liveChallenge = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      code: z.string().min(1).max(256),
+      walletAddress: z.string().regex(/^0x[0-9a-fA-F]{40}$/),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const { createLiveClaimChallenge } = await import("@/server/claims/live-claim.server");
+    return createLiveClaimChallenge(data);
+  });
+
+const liveSubmit = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      code: z.string().min(1).max(256),
+      walletAddress: z.string().regex(/^0x[0-9a-fA-F]{40}$/),
+      challengeId: z.string().uuid(),
+      signature: z.string().regex(/^0x[0-9a-fA-F]{130}$/),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const { relayLiveClaim } = await import("@/server/claims/relayer.server");
+    return relayLiveClaim(data);
+  });
 export async function getClaimPreview(code: string): Promise<ClaimPreview> {
+  if (appConfig.dataMode === "live") return livePreview({ data: { code } });
   const c = claims.find((v) => v.code === code);
   if (!c)
     return delay({
@@ -25,6 +61,7 @@ export async function createClaimChallenge({
   code: string;
   walletAddress: string;
 }): Promise<ClaimChallenge> {
+  if (appConfig.dataMode === "live") return liveChallenge({ data: { code, walletAddress } });
   const c = claims.find((v) => v.code === code);
   if (!c || c.status !== "AVAILABLE") throw new Error("This DreamDrop can no longer be claimed.");
   const expiresAt = Date.now() + 60_000;
@@ -58,6 +95,8 @@ export async function submitClaim({
   challengeId: string;
   signature: string;
 }): Promise<ClaimedDrop> {
+  if (appConfig.dataMode === "live")
+    return liveSubmit({ data: { code, walletAddress, challengeId, signature } });
   const c = claims.find((v) => v.code === code);
   if (!c || c.status !== "AVAILABLE" || !challengeId || !signature)
     throw new Error("This DreamDrop can no longer be claimed.");

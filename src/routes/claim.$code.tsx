@@ -142,9 +142,14 @@ function ClaimPage() {
   const runClaim = async () => {
     setStage("claiming");
     setProgress(0);
+    let ticker: ReturnType<typeof setInterval> | undefined;
     try {
-      const ticker = setInterval(() => setProgress((p) => Math.min(2, p + 1)), 700);
-      const walletAddress = wallet.address ?? "0xdemo0000";
+      ticker = setInterval(() => setProgress((p) => Math.min(2, p + 1)), 700);
+      if (!wallet.address) throw new Error("Connect a recipient wallet before claiming.");
+      if (wallet.status === "wrong-network") {
+        await wallet.switchNetwork();
+      }
+      const walletAddress = wallet.address;
       const challenge = await createClaimChallenge({ code, walletAddress });
       setProgress(1);
       const signature = await signClaimAuthorization(challenge);
@@ -156,12 +161,13 @@ function ClaimPage() {
         signature,
       });
       const created = claimed.position;
-      clearInterval(ticker);
       setProgress(3);
       setPosition(created);
       setStage("revealed");
     } catch {
       setStage("failed");
+    } finally {
+      if (ticker) clearInterval(ticker);
     }
   };
 
@@ -195,6 +201,16 @@ function ClaimPage() {
         <p className="mt-4 text-center text-sm text-muted-foreground">
           Received free through DreamDrop. Market probability is not a guaranteed cash-out value.
         </p>
+        {position.claimTxHash ? (
+          <a
+            className="mt-3 block text-center text-sm font-medium text-primary underline"
+            href={`${appConfig.explorerUrl}/tx/${position.claimTxHash}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            View confirmed transfer on Somnia
+          </a>
+        ) : null}
 
         <MobileBottomAction>
           <div className="flex flex-col gap-2">
@@ -258,6 +274,10 @@ function ClaimPage() {
           <Button size="lg" className="w-full" disabled>
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             Claiming…
+          </Button>
+        ) : wallet.status === "wrong-network" ? (
+          <Button size="lg" className="w-full" onClick={() => void wallet.switchNetwork()}>
+            Switch to Somnia
           </Button>
         ) : wallet.status === "connected" ? (
           <div className="space-y-2">
