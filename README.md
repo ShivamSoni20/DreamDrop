@@ -33,7 +33,7 @@ DreamDEX provides the prediction markets, complete-set minting, order book, sett
 
 See [architecture](docs/architecture.md), [claim security](docs/claim-security.md), and [DreamDEX integration](docs/dreamdex-integration.md).
 
-Judge package: [submission overview](docs/SUBMISSION.md), [2–3 minute demo script](docs/DEMO_SCRIPT.md), [submission checklist](docs/SUBMISSION_CHECKLIST.md), [deployment guide](docs/DEPLOYMENT.md), and [DreamDEX SDK/docs feedback](FEEDBACK.md).
+Judge package: [submission overview](docs/SUBMISSION.md), [2–3 minute demo script](docs/DEMO_SCRIPT.md), [submission checklist](docs/SUBMISSION_CHECKLIST.md), [QA report](docs/QA_REPORT.md), [deployment guide](docs/DEPLOYMENT.md), and [DreamDEX SDK/docs feedback](FEEDBACK.md).
 
 ## Smart contract and gasless claims
 

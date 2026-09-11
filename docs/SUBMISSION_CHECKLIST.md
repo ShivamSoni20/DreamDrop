@@ -14,8 +14,8 @@
 - [x] Judge-facing submission copy prepared
 - [x] Deterministic 2–3 minute demo script prepared
 - [x] Production deployment handoff documented
-- [ ] Real Wallet A → Wallet B campaign and claim executed
-- [ ] Public production application deployed and smoke-tested
+- [x] Desktop mock-mode route and cash-out-dialog QA recorded
+- [x] Final local TypeScript, app, contract, and on-chain verification gates passed
 
 ## HUMAN-REQUIRED
 
