@@ -30,4 +30,10 @@ Deploy the tested Distributor only with a dedicated funded Shannon deployer:
 forge script contracts/script/DeployDreamDropDistributor.s.sol:DeployDreamDropDistributor --root contracts --rpc-url shannon --private-key "$DEPLOYER_PRIVATE_KEY" --broadcast -vvvv
 ```
 
-No Distributor address or deployment transaction is recorded yet. The configured Shannon RPC timed out during the latest deployment preflight; no result has been fabricated.
+Verified Shannon deployment (chain `50312`):
+
+- Distributor: [`0x7ACd0C1498e3C7210150D077a5b876E6952E3b81`](https://shannon-explorer.somnia.network/address/0x7ACd0C1498e3C7210150D077a5b876E6952E3b81)
+- Deployment transaction: [`0xa153b391098ee67884ec64a8de059aea15b0ae86b02b9ccb5cdcfe4bc1bc85e3`](https://shannon-explorer.somnia.network/tx/0xa153b391098ee67884ec64a8de059aea15b0ae86b02b9ccb5cdcfe4bc1bc85e3)
+- Deployer/relayer Wallet C: `0x7adfC0d7E2df25998f5978e029D310b7CEfc8F4A`
+
+`bun run distributor:verify` confirmed 3,835 bytes of deployed bytecode plus the expected on-chain EIP-712 domain separator and claim typehash.

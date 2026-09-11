@@ -75,7 +75,7 @@ forge script contracts/script/DeployDreamDropDistributor.s.sol:DeployDreamDropDi
 bun run distributor:verify
 ```
 
-The contract address and real transaction evidence are recorded in the integration documentation only after deployment succeeds.
+The verified Shannon deployment address and transaction are recorded in the integration documentation.
 
 ## Testing
 
