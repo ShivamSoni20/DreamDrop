@@ -8,7 +8,7 @@
 **Network:** Somnia  
 **Core Integration:** DreamDEX Event Contracts  
 **Initial Environment:** Somnia Shannon Testnet  
-**Primary Build Strategy:** Frontend-first in Lovable/Wire → backend and blockchain integration with Codex
+**Primary Build Strategy:** Frontend-first visual prototyping → backend and blockchain integration
 
 ---
 
@@ -1239,7 +1239,7 @@ This makes it easy to build the complete UI with mocks first and replace them la
 
 # 36. Frontend Mock Service Contract
 
-While building with Lovable/Wire, create interfaces for:
+While building the frontend, create interfaces for:
 
 ```ts
 getLiveMarkets()
