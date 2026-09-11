@@ -1,7 +1,9 @@
 # DreamDrop submission
 
-**Project name:** DreamDrop  
-**Tagline:** Airdrops that are live predictions.  
+**Project name:** DreamDrop
+
+**Tagline:** Airdrops that are live predictions.
+
 **Core hook:** Don't ask users to buy their first prediction. Airdrop it.
 
 ## Problem
