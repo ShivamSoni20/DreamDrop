@@ -16,7 +16,7 @@
 - [x] Persisted, server-authoritative EIP-712 challenges and signature verification
 - [x] Relayer implementation with reservation, receipt/event checks, and exact balance reconciliation
 - [x] Foundry Shannon deployment script
-- [ ] Deploy Distributor to Shannon and record address/transaction
+- [x] Deploy Distributor to Shannon and record address/transaction
 - [x] Guard campaign IDs against concurrent preparation races
 - [x] Wire creator mint/fund transactions to the approved UI
 - [x] Apply Supabase migrations and verify server-only RLS/grants
@@ -28,7 +28,7 @@
 - [x] Finalized-market lookup and settlement reconciliation
 - [x] Winner/void redemption
 - [x] Wallet-authorized live campaign and position reads
-- [ ] Campaign analytics and printable individual QR pack
+- [x] Campaign analytics and printable individual QR pack
 
 ## P2
 

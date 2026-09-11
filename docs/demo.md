@@ -13,4 +13,4 @@
 
 Do not demo live mode until every live dependency is configured; it must never fall back to simulated success.
 
-The Supabase migrations are applied and server-only privileges verified. Remaining external prerequisites are a reachable Shannon RPC, a funded deployer/relayer, Creator Wallet A with STT and supported tUSDC, a distinct Recipient Wallet B, a deployed Distributor address, and a production application origin. Live paths fail closed when any prerequisite is absent.
+The Supabase migrations are applied, server-only privileges are verified, and the Distributor is deployed at `0x7ACd0C1498e3C7210150D077a5b876E6952E3b81`. Remaining external prerequisites are Creator Wallet A with STT and supported tUSDC, a distinct Recipient Wallet B, a public HTTPS application origin, and production hosting credentials. Live paths fail closed when any prerequisite is absent.

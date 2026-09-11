@@ -2,6 +2,8 @@
 
 **Airdrops that are live predictions.**
 
+**Don't ask users to buy their first prediction. Airdrop it.**
+
 DreamDrop turns creator-funded DreamDEX Event Contract positions into secure, individual claim links and QR codes. Recipients receive a real UP or DOWN outcome token without funding their first prediction, then hold, cash out against executable liquidity, or redeem after settlement.
 
 ## Problem and solution
@@ -30,6 +32,8 @@ DreamDEX provides the prediction markets, complete-set minting, order book, sett
 - Bun, Vitest, Foundry, and GitHub Actions
 
 See [architecture](docs/architecture.md), [claim security](docs/claim-security.md), and [DreamDEX integration](docs/dreamdex-integration.md).
+
+Judge package: [submission overview](docs/SUBMISSION.md), [2–3 minute demo script](docs/DEMO_SCRIPT.md), [submission checklist](docs/SUBMISSION_CHECKLIST.md), [deployment guide](docs/DEPLOYMENT.md), and [DreamDEX SDK/docs feedback](FEEDBACK.md).
 
 ## Smart contract and gasless claims
 
@@ -75,7 +79,9 @@ forge script contracts/script/DeployDreamDropDistributor.s.sol:DeployDreamDropDi
 bun run distributor:verify
 ```
 
-The verified Shannon deployment address and transaction are recorded in the integration documentation.
+- Distributor: [`0x7ACd0C1498e3C7210150D077a5b876E6952E3b81`](https://shannon-explorer.somnia.network/address/0x7ACd0C1498e3C7210150D077a5b876E6952E3b81)
+- Deployment transaction: [`0xa153b391098ee67884ec64a8de059aea15b0ae86b02b9ccb5cdcfe4bc1bc85e3`](https://shannon-explorer.somnia.network/tx/0xa153b391098ee67884ec64a8de059aea15b0ae86b02b9ccb5cdcfe4bc1bc85e3)
+- Public app: pending the hosting handoff in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ## Testing
 
