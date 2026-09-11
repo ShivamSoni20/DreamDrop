@@ -12,6 +12,9 @@ import { CardsSkeleton, ErrorState, MobileBottomAction } from "@/components/drea
 import { Button } from "@/components/ui/button";
 import { pct, timeAgo, usd } from "@/lib/format";
 import { cashOutPosition, getPosition, redeemPosition } from "@/services/positionService";
+import { useWallet } from "@/lib/wallet";
+import { appConfig } from "@/lib/config";
+import type { Position } from "@/lib/types";
 
 const searchSchema = z.object({
   cashout: z.boolean().optional(),
@@ -38,16 +41,18 @@ export const Route = createFileRoute("/position/$positionId")({
 });
 
 function PositionDetail() {
+  const wallet = useWallet();
   const { positionId } = Route.useParams();
   const search = Route.useSearch();
   const navigate = useNavigate();
   const [cashoutOpen, setCashoutOpen] = useState(Boolean(search.cashout));
-  const [soldFor, setSoldFor] = useState<number | null>(null);
-  const [redeemed, setRedeemed] = useState(false);
+  const [soldResult, setSoldResult] = useState<Position | null>(null);
+  const [redeemedResult, setRedeemedResult] = useState<Position | null>(null);
 
   const position = useQuery({
-    queryKey: ["position", positionId],
-    queryFn: () => getPosition(positionId),
+    queryKey: ["position", positionId, wallet.address],
+    queryFn: () => getPosition(positionId, wallet.address ?? undefined),
+    enabled: wallet.status === "connected",
   });
 
   if (position.isPending) {
@@ -72,7 +77,7 @@ function PositionDetail() {
 
   const p = position.data;
 
-  if (soldFor !== null) {
+  if (soldResult) {
     return (
       <AppShell>
         <div className="mx-auto max-w-md text-center">
@@ -80,12 +85,22 @@ function PositionDetail() {
           <p className="mt-2 text-muted-foreground">
             {p.asset} {p.side} sold for
           </p>
-          <p className="mt-2 text-5xl font-semibold">{usd(soldFor)}</p>
-          <p className="mt-3 font-mono text-xs break-all text-muted-foreground">{p.claimTx}</p>
+          <p className="mt-2 text-5xl font-semibold">{usd(soldResult.soldFor ?? 0)}</p>
+          <p className="mt-3 font-mono text-xs break-all text-muted-foreground">
+            {soldResult.cashoutTxHash}
+          </p>
           <div className="mt-8 flex flex-col gap-2">
-            <Button variant="outline" onClick={() => toast.info("Mock explorer link")}>
-              View transaction
-            </Button>
+            {soldResult.cashoutTxHash ? (
+              <Button asChild variant="outline">
+                <a
+                  href={`${appConfig.explorerUrl}/tx/${soldResult.cashoutTxHash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View transaction
+                </a>
+              </Button>
+            ) : null}
             <Button asChild variant="outline">
               <Link to="/explore">Explore more markets</Link>
             </Button>
@@ -98,18 +113,36 @@ function PositionDetail() {
     );
   }
 
-  if (redeemed) {
+  if (redeemedResult) {
     return (
       <AppShell>
         <div className="mx-auto max-w-md text-center">
           <h1 className="text-3xl font-semibold">Payout redeemed.</h1>
-          <p className="mt-2 text-5xl font-semibold">{usd(p.potentialPayout)}</p>
-          <p className="mt-2 text-sm text-muted-foreground">mock collateral</p>
-          <p className="mt-3 font-mono text-xs break-all text-muted-foreground">{p.claimTx}</p>
+          <p className="mt-2 text-5xl font-semibold">
+            {usd(
+              redeemedResult.redemptionProceedsRaw &&
+                redeemedResult.collateralDecimals !== undefined
+                ? Number(redeemedResult.redemptionProceedsRaw) /
+                    10 ** redeemedResult.collateralDecimals
+                : p.potentialPayout,
+            )}
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">{p.network}</p>
+          <p className="mt-3 font-mono text-xs break-all text-muted-foreground">
+            {redeemedResult.redemptionTxHash}
+          </p>
           <div className="mt-8 flex flex-col gap-2">
-            <Button variant="outline" onClick={() => toast.info("Mock explorer link")}>
-              View transaction
-            </Button>
+            {redeemedResult.redemptionTxHash ? (
+              <Button asChild variant="outline">
+                <a
+                  href={`${appConfig.explorerUrl}/tx/${redeemedResult.redemptionTxHash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View transaction
+                </a>
+              </Button>
+            ) : null}
             <Button asChild variant="ghost">
               <Link to="/my-drops">Back to my drops</Link>
             </Button>
@@ -237,8 +270,7 @@ function PositionDetail() {
                   size="lg"
                   className="shadow-brand"
                   onClick={async () => {
-                    await redeemPosition(p.id);
-                    setRedeemed(true);
+                    setRedeemedResult(await redeemPosition(p.id));
                   }}
                 >
                   {voided ? "Redeem position" : "Redeem payout"}
@@ -275,9 +307,9 @@ function PositionDetail() {
           }
         }}
         onConfirmed={async (price) => {
-          await cashOutPosition(p.id, price);
+          const result = await cashOutPosition(p.id, price);
           setCashoutOpen(false);
-          setSoldFor(price);
+          setSoldResult(result);
         }}
       />
     </AppShell>

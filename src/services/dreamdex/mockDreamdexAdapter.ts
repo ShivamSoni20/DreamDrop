@@ -37,5 +37,23 @@ export function createMockDreamdexAdapter(): DreamdexAdapter {
     async getSettlementStatus(marketId) {
       return (await this.getMarketOnchain(marketId)).status;
     },
+    async quoteCashout({ quantityRaw }) {
+      return {
+        limitPriceRaw: 540_000n,
+        quantityRaw,
+        fillableQuantityRaw: quantityRaw,
+        estimatedProceedsRaw: (quantityRaw * 540_000n) / 1_000_000n,
+        decimals: 6,
+      };
+    },
+    async executeCashout({ quantityRaw }) {
+      return {
+        transactionHash: `0x${Date.now().toString(16)}`,
+        proceedsRaw: (quantityRaw * 540_000n) / 1_000_000n,
+      };
+    },
+    async redeemPosition() {
+      return { transactionHash: `0x${Date.now().toString(16)}`, proceedsRaw: 1_000_000n };
+    },
   };
 }

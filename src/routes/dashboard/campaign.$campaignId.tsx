@@ -22,9 +22,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getCampaign } from "@/services/campaignService";
+import { getCampaign, getCampaignClaims } from "@/services/campaignService";
 import { getMarket } from "@/services/marketService";
 import { usd } from "@/lib/format";
+import { useWallet } from "@/lib/wallet";
+import { appConfig } from "@/lib/config";
 
 export const Route = createFileRoute("/dashboard/campaign/$campaignId")({
   head: () => ({
@@ -45,18 +47,18 @@ export const Route = createFileRoute("/dashboard/campaign/$campaignId")({
   component: CampaignDetail,
 });
 
-const recentClaims = [
-  { drop: "#07", side: "UP" as const, wallet: "0x71…39", ago: "2m ago" },
-  { drop: "#08", side: "DOWN" as const, wallet: "0x82…18", ago: "4m ago" },
-  { drop: "#09", side: "UP" as const, wallet: "0x2f…c1", ago: "7m ago" },
-  { drop: "#10", side: "DOWN" as const, wallet: "0xa9…7b", ago: "11m ago" },
-];
-
 function CampaignDetail() {
   const { campaignId } = Route.useParams();
+  const wallet = useWallet();
   const campaign = useQuery({
-    queryKey: ["campaign", campaignId],
-    queryFn: () => getCampaign(campaignId),
+    queryKey: ["campaign", campaignId, wallet.address],
+    queryFn: () => getCampaign(campaignId, wallet.address ?? undefined),
+    enabled: wallet.status === "connected",
+  });
+  const claims = useQuery({
+    queryKey: ["campaign-claims", campaignId, wallet.address],
+    queryFn: () => getCampaignClaims(campaignId, wallet.address ?? undefined),
+    enabled: wallet.status === "connected",
   });
   const market = useQuery({
     queryKey: ["market", campaign.data?.marketId],
@@ -86,7 +88,13 @@ function CampaignDetail() {
 
   const c = campaign.data;
   const claimPct = Math.round((c.claimedDrops / c.totalDrops) * 100);
-  const claimUrl = `https://dreamdrop.app/claim/demo?c=${c.id}`;
+  const claimUrl = claims.data?.[0]
+    ? `${appConfig.appUrl.replace(/\/$/, "")}/claim/${claims.data[0].code}`
+    : null;
+  const recentClaims = (claims.data ?? [])
+    .filter((claim) => claim.claimed)
+    .slice(-10)
+    .reverse();
 
   return (
     <AppShell>
@@ -99,6 +107,10 @@ function CampaignDetail() {
             <Button
               variant="outline"
               onClick={async () => {
+                if (!claimUrl) {
+                  toast.error("No unclaimed link is available.");
+                  return;
+                }
                 await navigator.clipboard.writeText(claimUrl);
                 toast.success("Campaign link copied");
               }}
@@ -106,9 +118,9 @@ function CampaignDetail() {
               <Copy className="size-4" aria-hidden="true" />
               Copy link
             </Button>
-            <Button variant="outline" onClick={() => toast.success("QR pack queued")}>
+            <Button variant="outline" onClick={() => window.print()}>
               <Download className="size-4" aria-hidden="true" />
-              QR pack
+              Print QR pack
             </Button>
           </>
         }
@@ -163,25 +175,48 @@ function CampaignDetail() {
             </TableHeader>
             <TableBody>
               {recentClaims.map((claim) => (
-                <TableRow key={claim.drop}>
-                  <TableCell className="font-medium">Drop {claim.drop}</TableCell>
+                <TableRow key={claim.id}>
+                  <TableCell className="font-medium">Drop #{claim.claimIndex}</TableCell>
                   <TableCell>
-                    <SideBadge side={claim.side} asset={c.asset} size="sm" />
+                    <SideBadge side={claim.side!} asset={c.asset} size="sm" />
                   </TableCell>
-                  <TableCell className="font-mono text-xs">{claim.wallet}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">{claim.ago}</TableCell>
+                  <TableCell className="font-mono text-xs">{claim.recipientWallet}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {claim.claimedAt ? new Date(claim.claimedAt).toLocaleString() : "—"}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </section>
 
-        <QRCard
-          value={claimUrl}
-          label="Campaign QR"
-          caption="Print it, project it, or drop it in a pack."
-        />
+        {claimUrl ? (
+          <QRCard value={claimUrl} label="Individual QR" caption="One link, one prediction drop." />
+        ) : (
+          <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+            No individual claim links are available.
+          </div>
+        )}
       </div>
+
+      {claims.data?.length ? (
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold">Individual QR pack</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Each code can be claimed once. Distribute each card to one recipient.
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 print:grid-cols-2">
+            {claims.data.map((claim) => (
+              <QRCard
+                key={claim.id}
+                value={`${appConfig.appUrl.replace(/\/$/, "")}/claim/${claim.code}`}
+                label={`Drop #${claim.claimIndex}`}
+                caption={claim.claimed ? "Claimed" : "Available"}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="mt-8">
         <Button asChild variant="ghost">

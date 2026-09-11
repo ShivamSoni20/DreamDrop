@@ -22,7 +22,11 @@ export async function findClaimById(id: string) {
 
 export async function findClaimsByCampaign(campaignId: string) {
   return unwrapDatabaseResult(
-    await getDatabase().from("claims").select("id").eq("campaign_id", campaignId),
+    await getDatabase()
+      .from("claims")
+      .select("*")
+      .eq("campaign_id", campaignId)
+      .order("claim_index", { ascending: true }),
   );
 }
 

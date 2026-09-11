@@ -9,6 +9,7 @@ import { getPositions } from "@/services/positionService";
 import type { Position } from "@/lib/types";
 import { usd } from "@/lib/format";
 import { useWallet } from "@/lib/wallet";
+import { appConfig } from "@/lib/config";
 
 export const Route = createFileRoute("/my-drops")({
   head: () => ({
@@ -105,11 +106,13 @@ function MyDrops() {
                     title="No drops here yet"
                     description="Claim a DreamDrop and your live position will show up here."
                     action={
-                      <Button asChild>
-                        <Link to="/claim/$code" params={{ code: "demo" }}>
-                          Try a demo drop
-                        </Link>
-                      </Button>
+                      appConfig.dataMode === "mock" ? (
+                        <Button asChild>
+                          <Link to="/claim/$code" params={{ code: "demo" }}>
+                            Try a demo drop
+                          </Link>
+                        </Button>
+                      ) : undefined
                     }
                   />
                 ) : (

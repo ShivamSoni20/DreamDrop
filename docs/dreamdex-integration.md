@@ -18,9 +18,11 @@ The Distributor uses the verified `transfer` and `transferFrom` ordering and che
 
 One whole testnet contract is 1,000,000 raw units. Complete-set minting, balances, prices, and quantities stay in bigint/raw units at the adapter boundary. Execution must re-read `getMarketOnchain` and require non-finalized status `1` immediately before minting or trading.
 
-Run `bun run dreamdex:smoke` with `DREAMDEX_SMOKE_PRIVATE_KEY` set to a dedicated funded Shannon wallet. The default performs read-only discovery. Set `DREAMDEX_SMOKE_WRITE=true` only to mint a one-contract complete set and reconcile both outcome balances. This has not been executed without a funded wallet.
+Run `bun run dreamdex:smoke` with `DREAMDEX_SMOKE_PRIVATE_KEY` set to a dedicated funded Shannon wallet. The default performs read-only discovery. Set `DREAMDEX_SMOKE_WRITE=true` only to mint a one-contract complete set and reconcile both outcome balances.
 
-The latest read smoke on 2026-09-11 resolved Trading ETH/tUSDC market `0x0000000000000000000000000000000000000000000000000000000000019656`, canonical pool `0xe66c0C1FE6a10D67Ee9772dFb881f2611F9109DC`, outcome token `0xB52c5934113Af5c0Bb20eb3C72290C8215f755b9`, YES ID ending `7312`, and NO ID ending `7313`. This is time-sensitive evidence, not hard-coded configuration. Write-mode minting remains unverified because no funded smoke-test key was configured.
+The latest successful read smoke on 2026-09-11 resolved Trading BTC/tUSDC market `0x000000000000000000000000000000000000000000000000000000000001971f`, canonical pool `0x69E62A394Ee036FfDc867E2C7d689D5B65144a80`, outcome token `0xB52c5934113Af5c0Bb20eb3C72290C8215f755b9`, YES ID ending `8112`, and NO ID ending `8113`. This is time-sensitive evidence, not hard-coded configuration. Write-mode minting remains unverified because no dedicated smoke-test key was configured.
+
+Cash-out reads the current canonical market and order book, applies the SDK's tick/lot-aware sell quote, and requires `fillableQuantity == quantity`. Submission uses `ORDER_TYPE.FILL_OR_KILL`, confirmed fill totals, and the exact outcome-token balance decrease. Redemption requires a finalized resolved/void market and verifies that collateral increased. All authoritative order values remain bigint raw units.
 
 Deploy the tested Distributor only with a dedicated funded Shannon deployer:
 
@@ -28,4 +30,4 @@ Deploy the tested Distributor only with a dedicated funded Shannon deployer:
 forge script contracts/script/DeployDreamDropDistributor.s.sol:DeployDreamDropDistributor --root contracts --rpc-url shannon --private-key "$DEPLOYER_PRIVATE_KEY" --broadcast -vvvv
 ```
 
-No Distributor address or deployment transaction is recorded yet; none has been fabricated.
+No Distributor address or deployment transaction is recorded yet. The configured Shannon RPC timed out during the latest deployment preflight; no result has been fabricated.

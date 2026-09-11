@@ -1,6 +1,8 @@
 import {
   SomniaMarkets,
   SOMNIA_TESTNET_ADDRESSES,
+  ORDER_TYPE,
+  quoteBinarySellOverBook,
   type BinaryMarket,
 } from "@somnia-chain/markets-sdk";
 import { somniaTestnet } from "viem/chains";
@@ -118,6 +120,126 @@ export function createLiveDreamdexAdapter(): DreamdexAdapter {
 
     async getSettlementStatus(marketId) {
       return (await this.getMarketOnchain(marketId)).status;
+    },
+
+    async quoteCashout({ marketId, side, quantityRaw }) {
+      const onchain = await exchange.client.getMarketOnchain(marketId);
+      if (onchain.finalized || onchain.status !== 1 || onchain.expiry <= BigInt(Date.now() / 1000))
+        return null;
+      const [book, grid] = await Promise.all([
+        exchange.client.getBinaryOrderBook(onchain.pool, {
+          depth: 100,
+          decimals: onchain.decimals,
+        }),
+        exchange.client.getBinaryBookParams(onchain.pool),
+      ]);
+      const quote = quoteBinarySellOverBook(
+        book,
+        side === "UP" ? "SELL_YES" : "SELL_NO",
+        quantityRaw,
+        10n ** BigInt(onchain.decimals),
+        { ...grid, slippageBps: 100n, slippageMinTicks: 2n },
+      );
+      return quote
+        ? {
+            limitPriceRaw: quote.limitPrice,
+            quantityRaw: quote.quantity,
+            fillableQuantityRaw: quote.fillableQuantity,
+            estimatedProceedsRaw: quote.estProceeds,
+            decimals: onchain.decimals,
+          }
+        : null;
+    },
+
+    async executeCashout({ marketId, side, quantityRaw }) {
+      if (typeof window === "undefined" || !window.ethereum)
+        throw new Error("Cash-out requires the connected recipient wallet.");
+      const accounts = (await window.ethereum.request({ method: "eth_accounts" })) as string[];
+      if (!accounts[0]) throw new Error("Connect the position owner wallet.");
+      const account = getAddress(accounts[0]);
+      const onchain = await exchange.client.getMarketOnchain(marketId);
+      if (onchain.finalized || onchain.status !== 1 || onchain.expiry <= BigInt(Date.now() / 1000))
+        throw new Error("This market is no longer trading.");
+      const tokenId = side === "UP" ? onchain.yesId : onchain.noId;
+      const before = await exchange.client.getOutcomeBalance({
+        outcomeToken: onchain.outcomeToken,
+        account,
+        id: tokenId,
+      });
+      if (before < quantityRaw) throw new Error("The wallet no longer holds the full position.");
+      const quote = await this.quoteCashout({ marketId, side, quantityRaw });
+      if (!quote || quote.quantityRaw !== quantityRaw || quote.fillableQuantityRaw !== quantityRaw)
+        throw new Error("No full cash-out liquidity right now. Hold until settlement.");
+      exchange.setSigner({
+        walletClient: createWalletClient({
+          account,
+          chain: somniaTestnet,
+          transport: custom(window.ethereum),
+        }),
+      });
+      const result = await exchange.trader.placeOrder({
+        pool: onchain.pool,
+        side: side === "UP" ? "SELL_YES" : "SELL_NO",
+        price:
+          side === "UP"
+            ? quote.limitPriceRaw
+            : 10n ** BigInt(onchain.decimals) - quote.limitPriceRaw,
+        quantity: quantityRaw,
+        outcomeToken: onchain.outcomeToken,
+        yesId: onchain.yesId,
+        noId: onchain.noId,
+        collateral: onchain.collateral,
+        orderType: ORDER_TYPE.FILL_OR_KILL,
+      });
+      if (result.receipt.status !== "success") throw new Error("DreamDEX cash-out reverted.");
+      const filled = result.fills.reduce((sum, fill) => sum + fill.quantityFilled, 0n);
+      if (filled !== quantityRaw)
+        throw new Error("DreamDEX did not fill the full cash-out quantity.");
+      const after = await exchange.client.getOutcomeBalance({
+        outcomeToken: onchain.outcomeToken,
+        account,
+        id: tokenId,
+      });
+      if (before - after !== quantityRaw)
+        throw new Error("Outcome balance did not decrease by the sold quantity.");
+      const one = 10n ** BigInt(onchain.decimals);
+      const proceedsRaw = result.fills.reduce((sum, fill) => {
+        const ownPrice = side === "UP" ? fill.fillPrice : one - fill.fillPrice;
+        return sum + (fill.quantityFilled * ownPrice) / one;
+      }, 0n);
+      return { transactionHash: result.hash, proceedsRaw };
+    },
+
+    async redeemPosition({ marketId, side, amountRaw }) {
+      if (typeof window === "undefined" || !window.ethereum)
+        throw new Error("Redemption requires the connected recipient wallet.");
+      const accounts = (await window.ethereum.request({ method: "eth_accounts" })) as string[];
+      if (!accounts[0]) throw new Error("Connect the position owner wallet.");
+      const account = getAddress(accounts[0]);
+      const onchain = await exchange.client.getMarketOnchain(marketId);
+      if (!onchain.finalized || (!onchain.isResolved && !onchain.isVoided))
+        throw new Error("The market is not finalized for redemption.");
+      if (!onchain.isVoided && onchain.winningOutcome !== (side === "UP" ? 0 : 1))
+        throw new Error("This position did not win and is not redeemable.");
+      const collateralBefore = await exchange.client.getErc20Balance(onchain.collateral, account);
+      exchange.setSigner({
+        walletClient: createWalletClient({
+          account,
+          chain: somniaTestnet,
+          transport: custom(window.ethereum),
+        }),
+      });
+      const result = await exchange.trader.redeem({
+        marketId,
+        outcomeIdx: side === "UP" ? 0 : 1,
+        amount: amountRaw,
+        outcomeToken: onchain.outcomeToken,
+      });
+      if (result.receipt.status !== "success") throw new Error("DreamDEX redemption reverted.");
+      const collateralAfter = await exchange.client.getErc20Balance(onchain.collateral, account);
+      if (collateralAfter <= collateralBefore)
+        throw new Error("Redemption did not increase the recipient collateral balance.");
+      return { transactionHash: result.hash, proceedsRaw: collateralAfter - collateralBefore };
     },
   };
 }

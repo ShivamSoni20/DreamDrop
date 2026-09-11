@@ -8,6 +8,7 @@ import { CardsSkeleton, EmptyState, ErrorState, PageHeader } from "@/components/
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getActivity, getCampaigns } from "@/services/campaignService";
+import { useWallet } from "@/lib/wallet";
 
 export const Route = createFileRoute("/dashboard/")({
   head: () => ({
@@ -29,7 +30,12 @@ export const Route = createFileRoute("/dashboard/")({
 });
 
 function Dashboard() {
-  const campaigns = useQuery({ queryKey: ["campaigns"], queryFn: () => getCampaigns() });
+  const wallet = useWallet();
+  const campaigns = useQuery({
+    queryKey: ["campaigns", wallet.address],
+    queryFn: () => getCampaigns(wallet.address ?? undefined),
+    enabled: wallet.status === "connected",
+  });
   const activity = useQuery({ queryKey: ["activity"], queryFn: () => getActivity() });
 
   const list = campaigns.data ?? [];

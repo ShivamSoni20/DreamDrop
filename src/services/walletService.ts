@@ -1,6 +1,7 @@
 import type { ClaimChallenge } from "@/lib/types";
 import { appConfig } from "@/lib/config";
 import { serializeClaimTypedData } from "@/lib/claim-authorization";
+import { accessProofMessage, type WalletAccessProof } from "@/lib/access-proof";
 export type WalletConnectionStatus = "DISCONNECTED" | "CONNECTING" | "CONNECTED" | "WRONG_NETWORK";
 export interface ConnectedWallet {
   address: string;
@@ -38,4 +39,31 @@ export async function signClaimAuthorization(payload: ClaimChallenge) {
     method: "eth_signTypedData_v4",
     params: [account, serializeClaimTypedData(payload.typedData)],
   }) as Promise<string>;
+}
+
+const accessProofs = new Map<string, WalletAccessProof>();
+
+export async function signAccessProof(walletAddress: string, resource: string) {
+  const cached = accessProofs.get(resource);
+  const now = Math.floor(Date.now() / 1000);
+  if (
+    cached &&
+    cached.wallet.toLowerCase() === walletAddress.toLowerCase() &&
+    cached.deadline > now + 30
+  )
+    return cached;
+  const provider = window.ethereum;
+  if (!provider) throw new Error("No injected wallet found.");
+  const accounts = (await provider.request({ method: "eth_accounts" })) as string[];
+  const account = accounts[0];
+  if (!account || account.toLowerCase() !== walletAddress.toLowerCase())
+    throw new Error("Connect the wallet that owns this data.");
+  const deadline = now + 240;
+  const signature = (await provider.request({
+    method: "personal_sign",
+    params: [accessProofMessage(account, resource, deadline), account],
+  })) as string;
+  const proof = { wallet: account, resource, deadline, signature };
+  accessProofs.set(resource, proof);
+  return proof;
 }

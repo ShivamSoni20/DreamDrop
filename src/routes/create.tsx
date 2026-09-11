@@ -138,7 +138,11 @@ function CreateCampaign() {
   };
 
   if (created && step === 3) {
-    const individualClaimUrl = created.claimUrls?.[0] ?? `${appConfig.appUrl}/claim/demo`;
+    const individualClaimUrl =
+      created.claimUrls?.[0] ??
+      (appConfig.dataMode === "mock" ? `${appConfig.appUrl}/claim/demo` : null);
+    if (!individualClaimUrl)
+      throw new Error("The live campaign was created without an individual claim URL.");
     const individualClaimCode = individualClaimUrl.split("/claim/")[1] ?? "demo";
     return (
       <AppShell>

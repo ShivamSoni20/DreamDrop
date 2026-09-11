@@ -9,7 +9,7 @@
 - [x] Standalone DreamDEX market/read/mint/balance smoke script
 - [x] ERC-6909 Distributor with Merkle claims and recipient authorization
 - [x] PostgreSQL/Supabase schema with RLS-denied browser access
-- [x] Distributor contract tests (30 passing Foundry tests)
+- [x] Distributor contract tests (31 passing Foundry tests)
 - [x] Live/mock DreamDEX adapter isolation and structured Shannon normalization
 - [x] Server-only Supabase repositories and follow-up claim migration
 - [x] Secure claim codes, encrypted secrets, Solidity-compatible Merkle generation and proofs
@@ -17,20 +17,23 @@
 - [x] Relayer implementation with reservation, receipt/event checks, and exact balance reconciliation
 - [x] Foundry Shannon deployment script
 - [ ] Deploy Distributor to Shannon and record address/transaction
-- [ ] Wire creator mint/fund transactions to the approved UI
+- [x] Guard campaign IDs against concurrent preparation races
+- [x] Wire creator mint/fund transactions to the approved UI
+- [x] Apply Supabase migrations and verify server-only RLS/grants
 - [ ] Execute and verify the relayer recipient balance check on Shannon
 
 ## P1
 
-- [ ] Full-fill IOC cash-out with on-chain market revalidation
-- [ ] Finalized-market lookup and settlement reconciliation
-- [ ] Winner/void redemption
+- [x] Full-fill protected cash-out with on-chain market revalidation
+- [x] Finalized-market lookup and settlement reconciliation
+- [x] Winner/void redemption
+- [x] Wallet-authorized live campaign and position reads
 - [ ] Campaign analytics and printable individual QR pack
 
 ## P2
 
 - [x] CI skeleton for app and contracts
-- [ ] Complete README and integration/security/demo docs
+- [x] Complete README and integration/security/demo docs
 - [x] Shannon explorer URL helpers
 - [x] Deployment configuration and executable Foundry deployment command
 - [ ] Responsive end-to-end QA with funded Wallet A and distinct Wallet B

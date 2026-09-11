@@ -61,13 +61,13 @@ export interface Campaign {
   status: CampaignStatus;
   message: string;
   createdAt: number;
-  claimUrls?: string[];
-  onchainCampaignId?: string;
-  mintTxHash?: string;
-  creationTxHash?: string;
-  operatorApprovalTxHash?: string;
-  upFundingTxHash?: string;
-  downFundingTxHash?: string;
+  claimUrls?: string[] | undefined;
+  onchainCampaignId?: string | undefined;
+  mintTxHash?: string | undefined;
+  creationTxHash?: string | undefined;
+  operatorApprovalTxHash?: string | undefined;
+  upFundingTxHash?: string | undefined;
+  downFundingTxHash?: string | undefined;
 }
 export interface CreateCampaignInput {
   name: string;
@@ -130,6 +130,8 @@ export interface Position {
   side: Side;
   tokenId: string;
   quantity: number;
+  amountRaw?: string | undefined;
+  collateralDecimals?: number | undefined;
   marketProbability: number;
   cashoutPrice: number;
   potentialPayout: number;
@@ -141,11 +143,13 @@ export interface Position {
   claimedFrom: string;
   claimedAt: number;
   claimTx: string;
-  claimTxHash?: string;
-  cashoutTxHash?: string;
-  redemptionTxHash?: string;
+  claimTxHash?: string | undefined;
+  cashoutTxHash?: string | undefined;
+  redemptionTxHash?: string | undefined;
   network: string;
-  soldFor?: number;
+  soldFor?: number | undefined;
+  cashoutProceedsRaw?: string | undefined;
+  redemptionProceedsRaw?: string | undefined;
   probabilityHistory: number[];
 }
 export interface CashoutQuote {
@@ -196,6 +200,11 @@ export interface CampaignClaim {
   campaignId: string;
   code: string;
   claimed: boolean;
+  side?: Side | undefined;
+  recipientWallet?: string | undefined;
+  claimedAt?: number | undefined;
+  claimTxHash?: string | undefined;
+  claimIndex?: number | undefined;
 }
 export interface ActivityEvent {
   id: string;

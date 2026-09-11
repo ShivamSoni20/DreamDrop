@@ -25,6 +25,28 @@ import {
 import { somniaTestnet } from "viem/chains";
 import { dreamdexAdapter } from "./dreamdex";
 import { dreamDropDistributorAbi, erc6909Abi } from "@/lib/distributor-abi";
+import { signAccessProof } from "./walletService";
+
+const accessProofSchema = z.object({
+  wallet: z.string().regex(/^0x[0-9a-fA-F]{40}$/),
+  resource: z.string().min(1).max(200),
+  deadline: z.number().int().positive(),
+  signature: z.string().regex(/^0x[0-9a-fA-F]+$/),
+});
+
+const listLiveCampaignsOnServer = createServerFn({ method: "POST" })
+  .validator(accessProofSchema)
+  .handler(async ({ data }) => {
+    const { listCreatorCampaigns } = await import("@/server/dashboard/live-dashboard.server");
+    return listCreatorCampaigns(data);
+  });
+
+const readLiveCampaignOnServer = createServerFn({ method: "POST" })
+  .validator(z.object({ proof: accessProofSchema, campaignId: z.string().uuid() }))
+  .handler(async ({ data }) => {
+    const { readCreatorCampaign } = await import("@/server/dashboard/live-dashboard.server");
+    return readCreatorCampaign(data.proof, data.campaignId);
+  });
 
 const prepareLiveCampaignOnServer = createServerFn({ method: "POST" })
   .validator(
@@ -97,14 +119,17 @@ async function executeLiveCampaign(input: CreateCampaignInput): Promise<Campaign
     throw new Error("Campaign budget must fund at least one drop per side.");
   const positionSizeRaw = parseUnits(String(input.positionSize), market.collateral.decimals);
   const totalAmountRaw = positionSizeRaw * BigInt(distribution.completeSets);
-  const prepared = await prepareLiveCampaignOnServer({
+  const preparationInput = {
+    creatorWallet: creator,
+    marketId: input.marketId,
+    name: input.name,
+    message: input.message,
+    positionSizeRaw: positionSizeRaw.toString(),
+    completeSets: distribution.completeSets,
+  };
+  let prepared = await prepareLiveCampaignOnServer({
     data: {
-      creatorWallet: creator,
-      marketId: input.marketId,
-      name: input.name,
-      message: input.message,
-      positionSizeRaw: positionSizeRaw.toString(),
-      completeSets: distribution.completeSets,
+      ...preparationInput,
     },
   });
   if (
@@ -134,18 +159,32 @@ async function executeLiveCampaign(input: CreateCampaignInput): Promise<Campaign
     amountRaw: totalAmountRaw,
   });
 
-  const createSimulation = await publicClient.simulateContract({
-    account: creator,
-    address: distributor,
-    abi: dreamDropDistributorAbi,
-    functionName: "createCampaign",
-    args: [
-      prepared.outcomeToken,
-      prepared.merkleRoot,
-      BigInt(prepared.claimDeadline),
-      BigInt(prepared.expectedCampaignId),
-    ],
-  });
+  const simulateCreate = () =>
+    publicClient.simulateContract({
+      account: creator,
+      address: distributor,
+      abi: dreamDropDistributorAbi,
+      functionName: "createCampaign",
+      args: [
+        prepared.outcomeToken,
+        prepared.merkleRoot,
+        BigInt(prepared.claimDeadline),
+        BigInt(prepared.expectedCampaignId),
+      ],
+    });
+  let createSimulation;
+  try {
+    createSimulation = await simulateCreate();
+  } catch (error) {
+    const currentId = await publicClient.readContract({
+      address: distributor,
+      abi: dreamDropDistributorAbi,
+      functionName: "nextCampaignId",
+    });
+    if (currentId === BigInt(prepared.expectedCampaignId)) throw error;
+    prepared = await prepareLiveCampaignOnServer({ data: preparationInput });
+    createSimulation = await simulateCreate();
+  }
   const creationTxHash = await walletClient.writeContract(createSimulation.request);
   const creationReceipt = await publicClient.waitForTransactionReceipt({ hash: creationTxHash });
   if (creationReceipt.status !== "success")
@@ -249,14 +288,21 @@ async function executeLiveCampaign(input: CreateCampaignInput): Promise<Campaign
   });
   return { ...finalized.campaign, claimUrls: finalized.claimUrls };
 }
-export async function getCampaigns(_walletAddress?: string) {
-  if (appConfig.dataMode === "live")
-    throw new Error("Live campaign listing requires the server campaign endpoint.");
+export async function getCampaigns(walletAddress?: string) {
+  if (appConfig.dataMode === "live") {
+    if (!walletAddress) throw new Error("Connect the creator wallet to view campaigns.");
+    const proof = await signAccessProof(walletAddress, "creator:campaigns");
+    return listLiveCampaignsOnServer({ data: proof });
+  }
   return delay([...campaigns]);
 }
-export async function getCampaign(id: string) {
-  if (appConfig.dataMode === "live")
-    throw new Error("Live campaign lookup requires the server campaign endpoint.");
+export async function getCampaign(id: string, walletAddress?: string) {
+  if (appConfig.dataMode === "live") {
+    if (!walletAddress) throw new Error("Connect the creator wallet to view this campaign.");
+    const proof = await signAccessProof(walletAddress, `creator:campaign:${id}`);
+    const result = await readLiveCampaignOnServer({ data: { proof, campaignId: id } });
+    return result.campaign;
+  }
   const v = campaigns.find((c) => c.id === id);
   if (!v) throw new Error("Campaign not found");
   return delay(v, 300);
@@ -295,9 +341,15 @@ export async function createCampaign(input: CreateCampaignInput): Promise<Campai
   campaigns.unshift(c);
   return delay(c, 600);
 }
-export async function getCampaignClaims(campaignId: string): Promise<CampaignClaim[]> {
-  if (appConfig.dataMode === "live")
-    throw new Error("Live claim-link listing requires creator wallet authentication.");
+export async function getCampaignClaims(
+  campaignId: string,
+  walletAddress?: string,
+): Promise<CampaignClaim[]> {
+  if (appConfig.dataMode === "live") {
+    if (!walletAddress) throw new Error("Connect the creator wallet to view claim links.");
+    const proof = await signAccessProof(walletAddress, `creator:campaign:${campaignId}`);
+    return (await readLiveCampaignOnServer({ data: { proof, campaignId } })).claims;
+  }
   return delay(
     claims
       .filter((c) => c.campaignId === campaignId)
@@ -309,9 +361,15 @@ export async function getCampaignClaims(campaignId: string): Promise<CampaignCla
       })),
   );
 }
-export async function getCampaignActivity(_campaignId?: string): Promise<ActivityEvent[]> {
-  if (appConfig.dataMode === "live")
-    throw new Error("Live campaign activity requires the server campaign endpoint.");
+export async function getCampaignActivity(
+  campaignId?: string,
+  walletAddress?: string,
+): Promise<ActivityEvent[]> {
+  if (appConfig.dataMode === "live") {
+    if (!campaignId || !walletAddress) return [];
+    const proof = await signAccessProof(walletAddress, `creator:campaign:${campaignId}`);
+    return (await readLiveCampaignOnServer({ data: { proof, campaignId } })).activity;
+  }
   return delay([...activity]);
 }
 export const getActivity = getCampaignActivity;

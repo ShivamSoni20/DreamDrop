@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./SiteHeader";
+import { appConfig } from "@/lib/config";
 
 const columns = [
   {
@@ -13,11 +14,11 @@ const columns = [
 ];
 
 const external = [
-  { label: "Docs", href: "#" },
-  { label: "GitHub", href: "#" },
-  { label: "DreamDEX", href: "#" },
-  { label: "Somnia", href: "#" },
-  { label: "Hackathon", href: "#" },
+  { label: "Docs", href: "https://docs.dreamdex.io/developers/event-contracts" },
+  { label: "GitHub", href: "https://github.com/ShivamSoni20/DreamDrop" },
+  { label: "DreamDEX", href: "https://dreamdex.io/" },
+  { label: "Somnia", href: "https://somnia.network/" },
+  { label: "Bot kit", href: "https://github.com/somnia-chain/dreamdex-bot-kit" },
 ];
 
 export function SiteFooter() {
@@ -51,7 +52,12 @@ export function SiteFooter() {
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
             {external.map((link) => (
               <li key={link.label}>
-                <a href={link.href} className="hover:text-foreground">
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-foreground"
+                >
                   {link.label}
                 </a>
               </li>
@@ -59,19 +65,21 @@ export function SiteFooter() {
           </ul>
         </div>
 
-        <div>
-          <h2 className="text-sm font-semibold">Try a drop</h2>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Open a demo claim link and see the full recipient flow.
-          </p>
-          <Link
-            to="/claim/$code"
-            params={{ code: "demo" }}
-            className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
-          >
-            Open demo drop →
-          </Link>
-        </div>
+        {appConfig.dataMode === "mock" ? (
+          <div>
+            <h2 className="text-sm font-semibold">Try a drop</h2>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Open a demo claim link and see the full recipient flow.
+            </p>
+            <Link
+              to="/claim/$code"
+              params={{ code: "demo" }}
+              className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+            >
+              Open demo drop →
+            </Link>
+          </div>
+        ) : null}
       </div>
       <div className="border-t border-border py-5 text-center text-xs text-muted-foreground">
         DreamDrop · Airdrops that are live predictions.

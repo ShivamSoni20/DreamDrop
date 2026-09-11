@@ -28,4 +28,21 @@ export interface DreamdexAdapter {
   mintCompleteSet(input: MintCompleteSetInput): Promise<MintCompleteSetResult>;
   getOrderBook(marketId: string): Promise<MarketOrderBook>;
   getSettlementStatus(marketId: string): Promise<MarketStatus>;
+  quoteCashout(input: { marketId: Hex; side: "UP" | "DOWN"; quantityRaw: bigint }): Promise<{
+    limitPriceRaw: bigint;
+    quantityRaw: bigint;
+    fillableQuantityRaw: bigint;
+    estimatedProceedsRaw: bigint;
+    decimals: number;
+  } | null>;
+  executeCashout(input: {
+    marketId: Hex;
+    side: "UP" | "DOWN";
+    quantityRaw: bigint;
+  }): Promise<{ transactionHash: Hex; proceedsRaw: bigint }>;
+  redeemPosition(input: {
+    marketId: Hex;
+    side: "UP" | "DOWN";
+    amountRaw: bigint;
+  }): Promise<{ transactionHash: Hex; proceedsRaw: bigint }>;
 }

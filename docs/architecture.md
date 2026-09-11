@@ -19,4 +19,8 @@ Mock mode is an intentional, isolated demo. Live mode uses injected wallet state
 
 The database is not authoritative for blockchain facts. Writes revalidate market state, and confirmed actions reconcile transaction receipts and outcome-token balances before application state advances.
 
+Creator preparation is server-authoritative. It reads the current canonical market and Distributor `nextCampaignId`, generates encrypted claim material for that ID, and returns only the root and transaction inputs. `createCampaign` requires the same expected ID on-chain, so a competing creation reverts instead of accepting a mismatched root. The application persists `LIVE` only after mint, creation, operator approval, both funding events, and inventory all reconcile.
+
 Server-only modules live under `src/server`. Public claim services cross the TanStack Start server-function boundary; browser bundles receive safe previews and typed data, never the Supabase service key, relayer key, Merkle proof, token side, or encrypted secret. The live relayer reserves a claim in Postgres before submitting and persists a position only after receipt, event, and balance reconciliation.
+
+Creator dashboards and owner positions use short-lived wallet-signed read proofs. Server queries enforce creator/owner filters before returning private claim links or wallet-linked data. Settlement reconciliation reads the durable DreamDEX `marketId`, updates resolving/win/loss/void states, and never treats a recycled pool address as market identity.
