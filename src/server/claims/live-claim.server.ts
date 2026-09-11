@@ -70,7 +70,12 @@ export async function createLiveClaimChallenge(input: {
 }): Promise<ClaimChallenge> {
   const recipient = getAddress(input.walletAddress) as Address;
   const claim = await resolveClaim(input.code);
-  if (!claim || claim.claimed || claim.campaigns.status !== "LIVE")
+  if (
+    !claim ||
+    claim.claimed ||
+    claim.campaigns.status !== "LIVE" ||
+    Date.parse(claim.campaigns.market_expiry) <= Date.now()
+  )
     throw new Error("This DreamDrop can no longer be claimed.");
   const campaignId = claim.campaigns.onchain_campaign_id;
   if (!campaignId) throw new Error("Campaign has not been confirmed on-chain.");

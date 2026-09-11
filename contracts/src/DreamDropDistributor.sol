@@ -38,6 +38,7 @@ contract DreamDropDistributor {
     error InvalidProof();
     error NotCreator();
     error TokenTransferFailed();
+    error UnexpectedCampaignId();
 
     event CampaignCreated(
         uint256 indexed campaignId,
@@ -71,13 +72,14 @@ contract DreamDropDistributor {
         );
     }
 
-    function createCampaign(address outcomeToken, bytes32 merkleRoot, uint64 claimDeadline)
+    function createCampaign(address outcomeToken, bytes32 merkleRoot, uint64 claimDeadline, uint256 expectedCampaignId)
         external
         returns (uint256 campaignId)
     {
         if (outcomeToken == address(0) || merkleRoot == bytes32(0) || claimDeadline <= block.timestamp) {
             revert InvalidCampaign();
         }
+        if (expectedCampaignId != nextCampaignId) revert UnexpectedCampaignId();
         campaignId = nextCampaignId++;
         campaigns[campaignId] = Campaign(msg.sender, outcomeToken, merkleRoot, claimDeadline, false);
         emit CampaignCreated(campaignId, msg.sender, outcomeToken, merkleRoot, claimDeadline);

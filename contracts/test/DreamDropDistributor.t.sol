@@ -80,7 +80,8 @@ contract DreamDropDistributorTest {
     }
 
     function testCreateCampaign() public {
-        uint256 id = distributor.createCampaign(address(token), _leaf(1, 0, TOKEN_ID, AMOUNT, SECRET), campaignDeadline);
+        uint256 id =
+            distributor.createCampaign(address(token), _leaf(1, 0, TOKEN_ID, AMOUNT, SECRET), campaignDeadline, 1);
         (address creator, address outcomeToken, bytes32 root, uint64 deadline, bool closed) = distributor.campaigns(id);
         _assertEq(creator, address(this));
         _assertEq(outcomeToken, address(token));
@@ -91,17 +92,23 @@ contract DreamDropDistributorTest {
 
     function testRejectsZeroOutcomeToken() public {
         vm.expectRevert(DreamDropDistributor.InvalidCampaign.selector);
-        distributor.createCampaign(address(0), bytes32(uint256(1)), campaignDeadline);
+        distributor.createCampaign(address(0), bytes32(uint256(1)), campaignDeadline, 1);
     }
 
     function testRejectsZeroMerkleRoot() public {
         vm.expectRevert(DreamDropDistributor.InvalidCampaign.selector);
-        distributor.createCampaign(address(token), bytes32(0), campaignDeadline);
+        distributor.createCampaign(address(token), bytes32(0), campaignDeadline, 1);
     }
 
     function testRejectsExpiredCampaignDeadline() public {
         vm.expectRevert(DreamDropDistributor.InvalidCampaign.selector);
-        distributor.createCampaign(address(token), bytes32(uint256(1)), uint64(block.timestamp));
+        distributor.createCampaign(address(token), bytes32(uint256(1)), uint64(block.timestamp), 1);
+    }
+
+    function testRejectsUnexpectedCampaignIdWithoutConsumingId() public {
+        vm.expectRevert(DreamDropDistributor.UnexpectedCampaignId.selector);
+        distributor.createCampaign(address(token), bytes32(uint256(1)), campaignDeadline, 2);
+        _assertEq(distributor.nextCampaignId(), 1);
     }
 
     function testOnlyCreatorCanFund() public {
@@ -122,7 +129,7 @@ contract DreamDropDistributorTest {
     function testCampaignsSharingTokenIdKeepIndependentInventory() public {
         uint256 first = _createSingleClaimCampaign();
         uint256 second = distributor.createCampaign(
-            address(token), _leaf(2, 0, TOKEN_ID, AMOUNT, keccak256("second")), campaignDeadline
+            address(token), _leaf(2, 0, TOKEN_ID, AMOUNT, keccak256("second")), campaignDeadline, 2
         );
         distributor.fundCampaign(first, TOKEN_ID, AMOUNT);
         distributor.fundCampaign(second, TOKEN_ID, AMOUNT * 2);
@@ -190,8 +197,9 @@ contract DreamDropDistributorTest {
         _claim(first, 0, TOKEN_ID, AMOUNT, SECRET, recipient, block.timestamp + 1 hours, NONCE, RECIPIENT_KEY);
 
         bytes32 secondSecret = keccak256("second secret");
-        uint256 second =
-            distributor.createCampaign(address(token), _leaf(2, 1, TOKEN_ID, AMOUNT, secondSecret), campaignDeadline);
+        uint256 second = distributor.createCampaign(
+            address(token), _leaf(2, 1, TOKEN_ID, AMOUNT, secondSecret), campaignDeadline, 2
+        );
         distributor.fundCampaign(second, TOKEN_ID, AMOUNT);
         vm.expectRevert(DreamDropDistributor.InvalidAuthorization.selector);
         _claim(second, 1, TOKEN_ID, AMOUNT, secondSecret, recipient, block.timestamp + 1 hours, NONCE, RECIPIENT_KEY);
@@ -272,7 +280,7 @@ contract DreamDropDistributorTest {
     function testWithdrawalCannotConsumeAnotherCampaignInventory() public {
         uint256 first = _fundSingleClaimCampaign();
         uint256 second = distributor.createCampaign(
-            address(token), _leaf(2, 0, TOKEN_ID, AMOUNT, keccak256("second")), campaignDeadline
+            address(token), _leaf(2, 0, TOKEN_ID, AMOUNT, keccak256("second")), campaignDeadline, 2
         );
         distributor.fundCampaign(second, TOKEN_ID, AMOUNT);
         distributor.closeCampaign(first);
@@ -352,7 +360,7 @@ contract DreamDropDistributorTest {
     }
 
     function _createSingleClaimCampaign() private returns (uint256) {
-        return distributor.createCampaign(address(token), _leaf(1, 0, TOKEN_ID, AMOUNT, SECRET), campaignDeadline);
+        return distributor.createCampaign(address(token), _leaf(1, 0, TOKEN_ID, AMOUNT, SECRET), campaignDeadline, 1);
     }
 
     function _fundSingleClaimCampaign() private returns (uint256 id) {

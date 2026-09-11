@@ -20,6 +20,12 @@ export async function findClaimById(id: string) {
   );
 }
 
+export async function findClaimsByCampaign(campaignId: string) {
+  return unwrapDatabaseResult(
+    await getDatabase().from("claims").select("id").eq("campaign_id", campaignId),
+  );
+}
+
 export async function reserveClaim(claimId: string, requestId: string, reservedUntil: string) {
   return unwrapDatabaseResult(
     await getDatabase().rpc("reserve_dreamdrop_claim", {

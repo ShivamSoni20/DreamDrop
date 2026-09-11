@@ -145,9 +145,11 @@ export async function relayLiveClaim(input: {
   signature: string;
 }): Promise<ClaimedDrop> {
   const env = getServerEnv();
-  const recipient = getAddress(input.walletAddress);
   const request = (await findRelayerRequest(input.challengeId)) as unknown as RequestRow | null;
   if (!request) throw new Error("Claim challenge not found.");
+  const recipient = getAddress(request.wallet);
+  if (recipient !== getAddress(input.walletAddress))
+    throw new Error("Claim challenge belongs to a different wallet.");
   const claim = (await findClaimById(request.claim_id)) as unknown as ClaimRow | null;
   const byCode = (await findClaimByCodeHash(
     hashClaimCode(input.code),

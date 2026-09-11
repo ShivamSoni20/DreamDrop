@@ -21,6 +21,8 @@ import type { Campaign, Market } from "@/lib/types";
 import { usd } from "@/lib/format";
 import { calculateCompleteSetDistribution, canCreateCampaignForMarket } from "@/lib/campaign-rules";
 import { appConfig } from "@/lib/config";
+import { useWallet } from "@/lib/wallet";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/create")({
   head: () => ({
@@ -77,6 +79,7 @@ function Stepper({ current }: { current: number }) {
 }
 
 function CreateCampaign() {
+  const wallet = useWallet();
   const [step, setStep] = useState(0);
   const [filter, setFilter] = useState<Filter>("ALL");
   const [market, setMarket] = useState<Market | null>(null);
@@ -112,20 +115,31 @@ function CreateCampaign() {
   const launch = async () => {
     if (!market) return;
     setRunning(true);
-    const campaign = await createCampaign({
-      name,
-      marketId: market.id,
-      budget,
-      positionSize,
-      message,
-    });
-    await new Promise((r) => setTimeout(r, 3600));
-    setRunning(false);
-    setCreated(campaign);
-    setStep(3);
+    try {
+      if (appConfig.dataMode === "live") {
+        if (wallet.status === "disconnected") await wallet.connect();
+        if (wallet.status === "wrong-network") await wallet.switchNetwork();
+      }
+      const campaign = await createCampaign({
+        name,
+        marketId: market.id,
+        budget,
+        positionSize,
+        message,
+      });
+      if (appConfig.dataMode === "mock") await new Promise((r) => setTimeout(r, 3600));
+      setCreated(campaign);
+      setStep(3);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Campaign creation failed.");
+    } finally {
+      setRunning(false);
+    }
   };
 
   if (created && step === 3) {
+    const individualClaimUrl = created.claimUrls?.[0] ?? `${appConfig.appUrl}/claim/demo`;
+    const individualClaimCode = individualClaimUrl.split("/claim/")[1] ?? "demo";
     return (
       <AppShell>
         <div className="mx-auto max-w-3xl text-center">
@@ -140,9 +154,9 @@ function CreateCampaign() {
 
           <div className="mt-8 grid gap-6 text-left lg:grid-cols-[1fr_1fr]">
             <QRCard
-              value={`https://dreamdrop.app/claim/demo?c=${created.id}`}
-              label="Campaign QR"
-              caption="Anyone who scans claims the next available drop."
+              value={individualClaimUrl}
+              label="Individual DreamDrop #001"
+              caption="This unique link can be claimed once. Its side stays hidden until transfer."
             />
             <div className="grid gap-3">
               <PredictionTicket
@@ -171,7 +185,7 @@ function CreateCampaign() {
               </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/claim/$code" params={{ code: "demo" }}>
+              <Link to="/claim/$code" params={{ code: individualClaimCode }}>
                 Open a claim page
               </Link>
             </Button>

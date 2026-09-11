@@ -13,4 +13,5 @@ export const appConfig = {
   campaignHeadroomFraction: envNumber(env["VITE_CAMPAIGN_HEADROOM_FRACTION"], 0.2),
   explorerUrl: env["VITE_EXPLORER_URL"] ?? "https://shannon-explorer.somnia.network",
   appUrl: env["VITE_APP_URL"] ?? "http://localhost:3000",
+  distributorAddress: env["VITE_DREAMDROP_DISTRIBUTOR_ADDRESS"] ?? "",
 } as const;

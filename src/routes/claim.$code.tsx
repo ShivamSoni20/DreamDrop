@@ -201,6 +201,20 @@ function ClaimPage() {
         <p className="mt-4 text-center text-sm text-muted-foreground">
           Received free through DreamDrop. Market probability is not a guaranteed cash-out value.
         </p>
+        <dl className="mt-4 grid grid-cols-2 gap-3 rounded-2xl border border-border bg-card p-4 text-sm">
+          <div>
+            <dt className="text-muted-foreground">Quantity</dt>
+            <dd className="font-semibold">{position.quantity}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Network</dt>
+            <dd className="font-semibold">{position.network}</dd>
+          </div>
+          <div className="col-span-2">
+            <dt className="text-muted-foreground">Outcome token ID</dt>
+            <dd className="break-all font-mono text-xs">{position.tokenId}</dd>
+          </div>
+        </dl>
         {position.claimTxHash ? (
           <a
             className="mt-3 block text-center text-sm font-medium text-primary underline"
@@ -225,19 +239,21 @@ function ClaimPage() {
             >
               Hold
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() =>
-                void navigate({
-                  to: "/position/$positionId",
-                  params: { positionId: position.id },
-                  search: { cashout: true },
-                })
-              }
-            >
-              Cash out {usd(position.cashoutPrice)}
-            </Button>
+            {appConfig.dataMode === "mock" ? (
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() =>
+                  void navigate({
+                    to: "/position/$positionId",
+                    params: { positionId: position.id },
+                    search: { cashout: true },
+                  })
+                }
+              >
+                Cash out {usd(position.cashoutPrice)}
+              </Button>
+            ) : null}
           </div>
         </MobileBottomAction>
       </Shell>

@@ -61,6 +61,13 @@ export interface Campaign {
   status: CampaignStatus;
   message: string;
   createdAt: number;
+  claimUrls?: string[];
+  onchainCampaignId?: string;
+  mintTxHash?: string;
+  creationTxHash?: string;
+  operatorApprovalTxHash?: string;
+  upFundingTxHash?: string;
+  downFundingTxHash?: string;
 }
 export interface CreateCampaignInput {
   name: string;

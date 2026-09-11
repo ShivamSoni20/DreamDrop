@@ -12,6 +12,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "dreamdex:smoke": "tsx scripts/dreamdex-smoke.ts",
+    "distributor:verify": "tsx scripts/verify-distributor.ts",
     "format": "prettier --write ."
   },
   "overrides": {

@@ -12,6 +12,16 @@ export async function findCampaignById(id: string) {
   );
 }
 
+export async function findCampaignByOnchainId(onchainCampaignId: string) {
+  return unwrapDatabaseResult(
+    await getDatabase()
+      .from("campaigns")
+      .select("*")
+      .eq("onchain_campaign_id", onchainCampaignId)
+      .maybeSingle(),
+  );
+}
+
 export async function updateCampaign(id: string, values: Record<string, unknown>) {
   return unwrapDatabaseResult(
     await getDatabase().from("campaigns").update(values).eq("id", id).select().single(),
