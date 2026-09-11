@@ -69,6 +69,7 @@ function MyDrops() {
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["positions", wallet.address],
     queryFn: () => getPositions(wallet.address ?? undefined),
+    enabled: appConfig.dataMode === "mock" || wallet.status === "connected",
   });
 
   const active = data?.filter((p) => p.status === "ACTIVE") ?? [];
@@ -83,7 +84,13 @@ function MyDrops() {
       />
 
       <div className="mt-8">
-        {isPending ? (
+        {appConfig.dataMode === "live" && wallet.status !== "connected" ? (
+          <EmptyState
+            title="Connect the recipient wallet"
+            description="Connect the wallet that received your DreamDrops to view its positions."
+            action={<Button onClick={() => void wallet.connect()}>Connect wallet</Button>}
+          />
+        ) : isPending ? (
           <CardsSkeleton count={3} />
         ) : isError ? (
           <ErrorState onRetry={() => void refetch()} />

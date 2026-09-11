@@ -121,6 +121,30 @@ export async function listCreatorCampaigns(proof: WalletAccessProof) {
   return rows.map(campaignFromRow);
 }
 
+export async function listCreatorActivity(proof: WalletAccessProof) {
+  const wallet = await verifyAccessProof(proof, "creator:campaigns");
+  const campaignRows = (await findCampaignsByCreator(wallet)) as Row[];
+  const claimGroups = await Promise.all(
+    campaignRows.map(async (campaign) => ({
+      campaign,
+      claims: (await findClaimsByCampaign(String(campaign.id))) as Row[],
+    })),
+  );
+  return claimGroups
+    .flatMap(({ campaign, claims }) =>
+      claims
+        .filter((claim) => claim.claimed_at)
+        .map((claim): ActivityEvent => ({
+          id: String(claim.id),
+          kind: "CLAIM",
+          text: `${String(campaign.name)} · Drop #${Number(claim.claim_index)} claimed by ${String(claim.recipient_wallet)}`,
+          at: Date.parse(String(claim.claimed_at)),
+        })),
+    )
+    .sort((a, b) => b.at - a.at)
+    .slice(0, 20);
+}
+
 export async function readCreatorCampaign(proof: WalletAccessProof, campaignId: string) {
   const wallet = await verifyAccessProof(proof, `creator:campaign:${campaignId}`);
   const row = (await findCampaignById(campaignId)) as Row | null;

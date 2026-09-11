@@ -8,7 +8,12 @@ import { AppShell } from "@/components/dreamdrop/AppShell";
 import { PredictionTicket } from "@/components/dreamdrop/PredictionTicket";
 import { CashoutDialog } from "@/components/dreamdrop/CashoutDialog";
 import { Sparkline, Stat } from "@/components/dreamdrop/primitives";
-import { CardsSkeleton, ErrorState, MobileBottomAction } from "@/components/dreamdrop/states";
+import {
+  CardsSkeleton,
+  EmptyState,
+  ErrorState,
+  MobileBottomAction,
+} from "@/components/dreamdrop/states";
 import { Button } from "@/components/ui/button";
 import { pct, timeAgo, usd } from "@/lib/format";
 import { cashOutPosition, getPosition, redeemPosition } from "@/services/positionService";
@@ -52,8 +57,20 @@ function PositionDetail() {
   const position = useQuery({
     queryKey: ["position", positionId, wallet.address],
     queryFn: () => getPosition(positionId, wallet.address ?? undefined),
-    enabled: wallet.status === "connected",
+    enabled: appConfig.dataMode === "mock" || wallet.status === "connected",
   });
+
+  if (appConfig.dataMode === "live" && wallet.status !== "connected") {
+    return (
+      <AppShell>
+        <EmptyState
+          title="Connect the recipient wallet"
+          description="Connect the wallet that owns this position to view, cash out, or redeem it."
+          action={<Button onClick={() => void wallet.connect()}>Connect wallet</Button>}
+        />
+      </AppShell>
+    );
+  }
 
   if (position.isPending) {
     return (

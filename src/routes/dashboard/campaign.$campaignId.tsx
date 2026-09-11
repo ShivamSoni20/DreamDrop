@@ -11,7 +11,7 @@ import {
   SideBadge,
   StatusBadge,
 } from "@/components/dreamdrop/primitives";
-import { CardsSkeleton, ErrorState, PageHeader } from "@/components/dreamdrop/states";
+import { CardsSkeleton, EmptyState, ErrorState, PageHeader } from "@/components/dreamdrop/states";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -53,18 +53,30 @@ function CampaignDetail() {
   const campaign = useQuery({
     queryKey: ["campaign", campaignId, wallet.address],
     queryFn: () => getCampaign(campaignId, wallet.address ?? undefined),
-    enabled: wallet.status === "connected",
+    enabled: appConfig.dataMode === "mock" || wallet.status === "connected",
   });
   const claims = useQuery({
     queryKey: ["campaign-claims", campaignId, wallet.address],
     queryFn: () => getCampaignClaims(campaignId, wallet.address ?? undefined),
-    enabled: wallet.status === "connected",
+    enabled: appConfig.dataMode === "mock" || wallet.status === "connected",
   });
   const market = useQuery({
     queryKey: ["market", campaign.data?.marketId],
     queryFn: () => getMarket(campaign.data!.marketId),
     enabled: Boolean(campaign.data),
   });
+
+  if (appConfig.dataMode === "live" && wallet.status !== "connected") {
+    return (
+      <AppShell>
+        <EmptyState
+          title="Connect your creator wallet"
+          description="Connect the wallet that owns this campaign to view its analytics and QR links."
+          action={<Button onClick={() => void wallet.connect()}>Connect wallet</Button>}
+        />
+      </AppShell>
+    );
+  }
 
   if (campaign.isPending) {
     return (
@@ -88,8 +100,9 @@ function CampaignDetail() {
 
   const c = campaign.data;
   const claimPct = Math.round((c.claimedDrops / c.totalDrops) * 100);
-  const claimUrl = claims.data?.[0]
-    ? `${appConfig.appUrl.replace(/\/$/, "")}/claim/${claims.data[0].code}`
+  const availableClaim = claims.data?.find((claim) => !claim.claimed);
+  const claimUrl = availableClaim
+    ? `${appConfig.appUrl.replace(/\/$/, "")}/claim/${availableClaim.code}`
     : null;
   const recentClaims = (claims.data ?? [])
     .filter((claim) => claim.claimed)

@@ -41,6 +41,13 @@ const listLiveCampaignsOnServer = createServerFn({ method: "POST" })
     return listCreatorCampaigns(data);
   });
 
+const listLiveActivityOnServer = createServerFn({ method: "POST" })
+  .validator(accessProofSchema)
+  .handler(async ({ data }) => {
+    const { listCreatorActivity } = await import("@/server/dashboard/live-dashboard.server");
+    return listCreatorActivity(data);
+  });
+
 const readLiveCampaignOnServer = createServerFn({ method: "POST" })
   .validator(z.object({ proof: accessProofSchema, campaignId: z.string().uuid() }))
   .handler(async ({ data }) => {
@@ -366,7 +373,11 @@ export async function getCampaignActivity(
   walletAddress?: string,
 ): Promise<ActivityEvent[]> {
   if (appConfig.dataMode === "live") {
-    if (!campaignId || !walletAddress) return [];
+    if (!walletAddress) return [];
+    if (!campaignId) {
+      const proof = await signAccessProof(walletAddress, "creator:campaigns");
+      return listLiveActivityOnServer({ data: proof });
+    }
     const proof = await signAccessProof(walletAddress, `creator:campaign:${campaignId}`);
     return (await readLiveCampaignOnServer({ data: { proof, campaignId } })).activity;
   }

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getActivity, getCampaigns } from "@/services/campaignService";
 import { useWallet } from "@/lib/wallet";
+import { appConfig } from "@/lib/config";
 
 export const Route = createFileRoute("/dashboard/")({
   head: () => ({
@@ -34,9 +35,13 @@ function Dashboard() {
   const campaigns = useQuery({
     queryKey: ["campaigns", wallet.address],
     queryFn: () => getCampaigns(wallet.address ?? undefined),
-    enabled: wallet.status === "connected",
+    enabled: appConfig.dataMode === "mock" || wallet.status === "connected",
   });
-  const activity = useQuery({ queryKey: ["activity"], queryFn: () => getActivity() });
+  const activity = useQuery({
+    queryKey: ["activity", wallet.address],
+    queryFn: () => getActivity(undefined, wallet.address ?? undefined),
+    enabled: appConfig.dataMode === "mock" || wallet.status === "connected",
+  });
 
   const list = campaigns.data ?? [];
   const dropsCreated = list.reduce((sum, c) => sum + c.totalDrops, 0);
@@ -59,7 +64,15 @@ function Dashboard() {
         }
       />
 
-      {campaigns.isPending ? (
+      {appConfig.dataMode === "live" && wallet.status !== "connected" ? (
+        <div className="mt-8">
+          <EmptyState
+            title="Connect your creator wallet"
+            description="Connect the wallet that created your campaigns to view private analytics and claim links."
+            action={<Button onClick={() => void wallet.connect()}>Connect wallet</Button>}
+          />
+        </div>
+      ) : campaigns.isPending ? (
         <div className="mt-8">
           <CardsSkeleton count={4} />
         </div>
