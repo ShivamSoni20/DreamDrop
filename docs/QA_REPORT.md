@@ -1,7 +1,9 @@
 # DreamDrop QA report
 
-Date: 2026-09-11  
-Environment: local development server, mock data mode  
+Date: 2026-09-11
+
+Environment: local development server, mock data mode
+
 Result: no confirmed product defect; coverage limitations remain
 
 ## Routes exercised
