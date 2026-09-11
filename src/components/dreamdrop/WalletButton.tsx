@@ -1,4 +1,6 @@
 import { Loader2, Wallet } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,6 +13,30 @@ import { shortAddress } from "@/lib/format";
 
 export function WalletButton({ className }: { className?: string }) {
   const { status, address, connect, disconnect, switchNetwork } = useWallet();
+  const navigate = useNavigate();
+
+  const handleConnect = async () => {
+    try {
+      await connect();
+      await navigate({ to: "/dashboard" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Wallet connection failed.");
+    }
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+    void navigate({ to: "/", replace: true });
+  };
+
+  const handleSwitchNetwork = async () => {
+    try {
+      await switchNetwork();
+      await navigate({ to: "/dashboard" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Network switch failed.");
+    }
+  };
 
   if (status === "connecting") {
     return (
@@ -23,7 +49,11 @@ export function WalletButton({ className }: { className?: string }) {
 
   if (status === "wrong-network") {
     return (
-      <Button variant="destructive" onClick={switchNetwork} className={className}>
+      <Button
+        variant="destructive"
+        onClick={() => void handleSwitchNetwork()}
+        className={className}
+      >
         Wrong network — switch to Somnia
       </Button>
     );
@@ -40,14 +70,14 @@ export function WalletButton({ className }: { className?: string }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem disabled>Somnia Shannon</DropdownMenuItem>
-          <DropdownMenuItem onClick={disconnect}>Disconnect</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleDisconnect}>Disconnect</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     );
   }
 
   return (
-    <Button onClick={() => void connect()} className={className}>
+    <Button onClick={() => void handleConnect()} className={className}>
       <Wallet className="size-4" aria-hidden="true" />
       Connect wallet
     </Button>

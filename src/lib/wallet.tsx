@@ -34,13 +34,19 @@ const expectedChainHex = `0x${appConfig.chainId.toString(16)}`;
 const getProvider = () => (typeof window === "undefined" ? undefined : window.ethereum);
 
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<WalletStatus>("disconnected");
+  const [status, setStatus] = useState<WalletStatus>(() =>
+    appConfig.dataMode === "live" ? "connecting" : "disconnected",
+  );
   const [address, setAddress] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (appConfig.dataMode === "mock") return;
     const provider = getProvider();
-    if (!provider) return;
+    if (!provider) {
+      setAddress(null);
+      setStatus("disconnected");
+      return;
+    }
     const [accounts, chainId] = await Promise.all([
       provider.request({ method: "eth_accounts" }) as Promise<string[]>,
       provider.request({ method: "eth_chainId" }) as Promise<string>,

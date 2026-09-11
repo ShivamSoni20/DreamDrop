@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CreateRouteImport } from './routes/create'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as MyDropsRouteImport } from './routes/my-drops'
 import { Route as ClaimCodeRouteImport } from './routes/claim.$code'
@@ -26,6 +27,11 @@ const IndexRoute = IndexRouteImport.update({
 const CreateRoute = CreateRouteImport.update({
   id: '/create',
   path: '/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExploreRoute = ExploreRouteImport.update({
@@ -44,9 +50,9 @@ const ClaimCodeRoute = ClaimCodeRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/dashboard/',
-  path: '/dashboard/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const PositionPositionIdRoute = PositionPositionIdRouteImport.update({
   id: '/position/$positionId',
@@ -55,14 +61,15 @@ const PositionPositionIdRoute = PositionPositionIdRouteImport.update({
 } as any)
 const DashboardCampaignCampaignIdRoute =
   DashboardCampaignCampaignIdRouteImport.update({
-    id: '/dashboard/campaign/$campaignId',
-    path: '/dashboard/campaign/$campaignId',
-    getParentRoute: () => rootRouteImport,
+    id: '/campaign/$campaignId',
+    path: '/campaign/$campaignId',
+    getParentRoute: () => DashboardRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/explore': typeof ExploreRoute
   '/my-drops': typeof MyDropsRoute
   '/claim/$code': typeof ClaimCodeRoute
@@ -84,6 +91,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/explore': typeof ExploreRoute
   '/my-drops': typeof MyDropsRoute
   '/claim/$code': typeof ClaimCodeRoute
@@ -96,6 +104,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/create'
+    | '/dashboard'
     | '/explore'
     | '/my-drops'
     | '/claim/$code'
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/create'
+    | '/dashboard'
     | '/explore'
     | '/my-drops'
     | '/claim/$code'
@@ -127,12 +137,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreateRoute: typeof CreateRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
   ExploreRoute: typeof ExploreRoute
   MyDropsRoute: typeof MyDropsRoute
   ClaimCodeRoute: typeof ClaimCodeRoute
   PositionPositionIdRoute: typeof PositionPositionIdRoute
-  DashboardIndexRoute: typeof DashboardIndexRoute
-  DashboardCampaignCampaignIdRoute: typeof DashboardCampaignCampaignIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -149,6 +158,13 @@ declare module '@tanstack/react-router' {
       path: '/create'
       fullPath: '/create'
       preLoaderRoute: typeof CreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explore': {
@@ -174,10 +190,10 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/': {
       id: '/dashboard/'
-      path: '/dashboard'
+      path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/position/$positionId': {
       id: '/position/$positionId'
@@ -188,23 +204,36 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/campaign/$campaignId': {
       id: '/dashboard/campaign/$campaignId'
-      path: '/dashboard/campaign/$campaignId'
+      path: '/campaign/$campaignId'
       fullPath: '/dashboard/campaign/$campaignId'
       preLoaderRoute: typeof DashboardCampaignCampaignIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
   }
 }
 
+interface DashboardRouteChildren {
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardCampaignCampaignIdRoute: typeof DashboardCampaignCampaignIdRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardCampaignCampaignIdRoute: DashboardCampaignCampaignIdRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreateRoute: CreateRoute,
+  DashboardRoute: DashboardRouteWithChildren,
   ExploreRoute: ExploreRoute,
   MyDropsRoute: MyDropsRoute,
   ClaimCodeRoute: ClaimCodeRoute,
   PositionPositionIdRoute: PositionPositionIdRoute,
-  DashboardIndexRoute: DashboardIndexRoute,
-  DashboardCampaignCampaignIdRoute: DashboardCampaignCampaignIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
